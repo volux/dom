@@ -3,8 +3,8 @@ Dom
 
 php 5.3 extended DOM Objects (DOMAttr and DOMElement, wrap DOMNodelist and DOMNamedNodeMap) via DOMDocument::registerNodeClass with jQuery-like functionality.
 
-Example
--------
+Build html example
+------------------
 
 	<?php
 	use volux\Dom\Html;
@@ -13,7 +13,7 @@ Example
 	$html
 		->root()->attr(array('lang' => 'en'));
 	$html
-		->meta(array('charset' => App::config('charset.html')))
+		->meta(array('charset' => 'UTF-8'))
 		->meta(array(
 			'http-equiv' => 'X-UA-Compatible',
 			'content' => 'IE=edge,chrome=1',
@@ -87,4 +87,7 @@ Result:
   	</body>
 	</html>
 
-	
+Parse html example
+------------------
+
+Coming soon...
