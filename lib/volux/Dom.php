@@ -4,19 +4,18 @@ namespace volux;
 {
 
     /**
-     * @package volux.pro
+     * @package volux\Dom
      * @author  Andrey Skulov <andrey.skulov@gmail.com>
      **/
     class Dom extends \DOMDocument
     {
         const
             NAME_NOT_MATCHED = 'not.matched',
-            FORCE_PREFIX = '!',
-            VERSION    = '1.0',
-            ENCODING   = 'UTF-8',
+            FORCE_PREFIX = '`',
+            VERSION = '1.0',
+            ENCODING = 'UTF-8',
             ELEMENT_CLASS = '\volux\Dom\Element',
-            ATTR_CLASS = '\volux\Dom\Attr'
-        ;
+            ATTR_CLASS = '\volux\Dom\Attr';
         /**
          * @var \DOMXPath
          */
@@ -74,8 +73,12 @@ namespace volux;
          */
         public function root($name = null)
         {
-            if (!is_null($name) && !$this->documentElement) {
-                return $this->appendChild($this->createElement($name));
+            if (!is_null($name)) {
+                if (!$this->documentElement) {
+                    $this->appendChild($this->createElement($name));
+                } else {
+                    $this->documentElement->name($name);
+                }
             }
             return $this->documentElement;
         }
@@ -133,7 +136,7 @@ namespace volux;
         public function notEmpty($node, $expr = null)
         {
             if (empty($node)) {
-                $this->root()->append($this->createComment(' '. static::NAME_NOT_MATCHED.' by "'. $expr.'" '));
+                $this->root()->append($this->createComment(' ' . static::NAME_NOT_MATCHED . ' by "' . $expr . '" '));
                 $node = $this->createNode(static::NAME_NOT_MATCHED, $expr);
             }
             return $node;
@@ -158,9 +161,9 @@ namespace volux;
         public function byId($id, $internal = true)
         {
             if ($internal) {
-                return $this->notEmpty($this->getElementById($id), '#'.$id);
+                return $this->notEmpty($this->getElementById($id), '#' . $id);
             }
-            return $this->find(static::FORCE_PREFIX.'//*[@id="'.$id.'"]', $this, 0);
+            return $this->find(static::FORCE_PREFIX . '//*[@id="' . $id . '"]', $this, 0);
         }
 
         /**
@@ -174,15 +177,15 @@ namespace volux;
             return $this;
         }
 
-/*        public function transform($schemeName, $element = null, $xsltParameters = array(), $asFragment = false)
-        {
-            if (is_null($element)) {
-                $element = $this;
-            }
-            @todo source!
-            $xslt = new \volux\Dom\Xslt\File(Args::with(array('path' => $schemeName)));
-            return $xslt->transform($element, $asFragment, $xsltParameters);
-        }*/
+        /*        public function transform($schemeName, $element = null, $xsltParameters = array(), $asFragment = false)
+                {
+                    if (is_null($element)) {
+                        $element = $this;
+                    }
+                    @todo source!
+                    $xslt = new \volux\Dom\Xslt\File(Args::with(array('path' => $schemeName)));
+                    return $xslt->transform($element, $asFragment, $xsltParameters);
+                }*/
 
         /**
          * @param $list
