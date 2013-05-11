@@ -89,4 +89,34 @@ Result:
 
 ### Parse html example
 
-Coming soon...
+```php
+<?php
+use volux\Dom;
+
+$htmlResult = new Dom\Html();
+
+$request = file_get_contents('http://news.google.com/news');
+/** You can use any transport for retrieve outer site content like curl */
+
+if ($request) {
+
+    $htmlRequest = new Dom\Html();
+    $htmlRequest->html($request)
+        ->root()
+            ->find('.titletext')
+                ->each(function ($node, $index) use ($htmlResult) {
+                    /** @var $node Dom\Tag */
+                    $htmlResult->body()
+                        ->append('p')
+                            ->append('span')->text(($index + 1) . ': ')
+                        ->parent()
+                            ->append('a')->attr('href', $node->parent()->attr('href'))->text($node->text());
+                });
+
+} else {
+
+    $htmlResult->body()->append('div', array('class'=>'empty'), 'Empty request result');
+}
+
+echo $htmlResult->title('Google News')->html(null, true, true);
+```
