@@ -13,7 +13,8 @@ use volux\Dom;
         {
             const
                 ELEMENT_CLASS = '\volux\Dom\Tag',
-                HEAD_HTML = '<!DOCTYPE html>';
+                HEAD_HTML = '<!DOCTYPE html>'
+            ;
 
             protected $head;
             protected $body;
@@ -79,7 +80,7 @@ use volux\Dom;
                     return $doc->saveHTML();
                 }
                 /* or easy way: */
-                return self::HEAD_HTML . PHP_EOL . $this->saveHTML($this->root()) . PHP_EOL;
+                return self::HEAD_HTML.PHP_EOL.$this->saveHTML($this->root()) . PHP_EOL;
             }
 
             /**
@@ -164,7 +165,7 @@ use volux\Dom;
                     $this->scripts->append('script')->attr('src', $uri)->text(false);
                 }
                 if (!is_null($code)) {
-                    $this->scripts->append('script')->add(PHP_EOL . $code . PHP_EOL);
+                    $this->scripts->append('script')->add(PHP_EOL.$code.PHP_EOL);
                 }
                 return $this;
             }
@@ -181,7 +182,7 @@ use volux\Dom;
                 if ($this->scripts->childNodes->length) {
                     $this->scripts->children()->appendTo('body');
                 }
-                return $this->html(null, true /*, true*/);
+                return $this->html(null, true, true);
             }
         }
     }

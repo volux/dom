@@ -14,7 +14,6 @@ use volux\Dom;
              * @var Dom
              */
             protected $dom;
-
             /**
              * @param \DOMNodelist|\DOMNamedNodeMap|Set|array $nodeList
              * @param Dom $dom
@@ -114,7 +113,7 @@ use volux\Dom;
                 if ($this->count() == 0) {
                     return $this->dom->notEmpty(false, 'Set::last()');
                 }
-                $offset = $this->count() - 1;
+                $offset = $this->count()-1;
                 return $this->offsetGet($offset);
             }
 
@@ -248,7 +247,7 @@ use volux\Dom;
             {
                 $string = '';
                 foreach ($this as $node) {
-                    $string .= (string)$node . PHP_EOL . PHP_EOL;
+                    $string .= (string)$node. PHP_EOL . PHP_EOL;
                 }
                 return $string;
             }

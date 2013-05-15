@@ -4,18 +4,18 @@ namespace volux;
 {
 
     /**
-     * @package volux\Dom
+     * @package volux.pro
      * @author  Andrey Skulov <andrey.skulov@gmail.com>
      **/
     class Dom extends \DOMDocument
     {
         const
             NAME_NOT_MATCHED = 'not.matched',
-            FORCE_PREFIX = '`',
-            VERSION = '1.0',
-            ENCODING = 'UTF-8',
+            VERSION    = '1.0',
+            ENCODING   = 'UTF-8',
             ELEMENT_CLASS = '\volux\Dom\Element',
-            ATTR_CLASS = '\volux\Dom\Attr';
+            ATTR_CLASS = '\volux\Dom\Attr'
+        ;
         /**
          * @var \DOMXPath
          */
@@ -37,7 +37,6 @@ namespace volux;
             $this->preserveWhiteSpace = false;
             $this->strictErrorChecking = false;
             $this->formatOutput = true;
-            $this->prefixLength = strlen(static::FORCE_PREFIX);
             $this->setXPath();
         }
 
@@ -84,7 +83,7 @@ namespace volux;
         }
 
         /**
-         * @param $expr
+         * @param string|array $expr
          * @param null $index
          * @param null $context
          *
@@ -104,27 +103,17 @@ namespace volux;
         }
 
         /**
-         * @param $expr
-         *
+         * @param string|array $expr
+         * @param string $axis
          * @return string
          */
-        public function xPathExpr($expr)
+        public function xPathExpr($expr, $axis = 'descendant::*')
         {
-            if (substr($expr, 0, $this->prefixLength) === static::FORCE_PREFIX) {
-                $expr = substr($expr, $this->prefixLength);
-                $correct = array(
-                    ':.//*[' => ':*[',
-                    '{.//*[' => '[',
-                    ']}'     => ']',
-                );
-                $expr = str_replace(array_keys($correct), array_values($correct), $expr);
-                return $expr;
+            if (is_array($expr)) {
+                $axis = $expr[1];
+                $expr = $expr[0];
             }
-            $expr = Dom\Css2Xpath::transform($expr);
-            if ($this->ns) {
-                $expr = preg_replace('/\/([a-z])/i', "/x:\${1}", $expr);
-            }
-            return $expr;
+            return Dom\XPath::fromCSS($expr, $axis);
         }
 
         /**
@@ -136,7 +125,7 @@ namespace volux;
         public function notEmpty($node, $expr = null)
         {
             if (empty($node)) {
-                $this->root()->append($this->createComment(' ' . static::NAME_NOT_MATCHED . ' by "' . $expr . '" '));
+                $this->root()->append($this->createComment(' '. static::NAME_NOT_MATCHED.' by "'. $expr.'" '));
                 $node = $this->createNode(static::NAME_NOT_MATCHED, $expr);
             }
             return $node;
@@ -161,9 +150,9 @@ namespace volux;
         public function byId($id, $internal = true)
         {
             if ($internal) {
-                return $this->notEmpty($this->getElementById($id), '#' . $id);
+                return $this->notEmpty($this->getElementById($id), '#'.$id);
             }
-            return $this->find(static::FORCE_PREFIX . '//*[@id="' . $id . '"]', $this, 0);
+            return $this->find('#'.$id, $this, 0);
         }
 
         /**

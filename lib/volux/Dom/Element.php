@@ -17,12 +17,11 @@ use volux\Dom;
              */
             public function is($expr)
             {
-                return !$this->owner()->find(Dom::FORCE_PREFIX . $this->getNodePath() . '{' . $this->owner()->xPathExpr($expr) . '}')->isEmpty();
+                return !$this->owner()->find(array($expr, $this->getNodePath()))->isEmpty();
             }
 
             /**
              * name of child node or attribute
-             *
              * @param $expr
              *
              * @return bool
@@ -120,7 +119,7 @@ use volux\Dom;
                 if (is_null($selector)) {
                     return $this->nextSibling;
                 }
-                return $this->find(Dom::FORCE_PREFIX . 'following-sibling::' . $this->owner()->xPathExpr($selector));
+                return $this->find(array($selector, 'following-sibling::*'));
             }
 
             /**
@@ -133,7 +132,7 @@ use volux\Dom;
                 if (is_null($selector)) {
                     return $this->previousSibling;
                 }
-                return $this->find(Dom::FORCE_PREFIX . 'preceding-sibling::' . $this->owner()->xPathExpr($selector));
+                return $this->find(array($selector, 'preceding-sibling::*'));
             }
 
             /**
@@ -206,7 +205,7 @@ use volux\Dom;
             public function position($to = null)
             {
                 if (is_null($to)) {
-                    return $this->find(Dom::FORCE_PREFIX . 'preceding-sibling::*')->count() + 1;
+                    return $this->find(array('', 'preceding-sibling::*'))->count() + 1;
                 }
                 return $this;
             }
@@ -254,7 +253,7 @@ use volux\Dom;
              */
             public function parents()
             {
-                return $this->find(Dom::FORCE_PREFIX . 'ancestor::*');
+                return $this->find(array('', 'ancestor::*'));
             }
 
             /**
@@ -264,7 +263,7 @@ use volux\Dom;
              */
             public function closest($expr)
             {
-                return $this->find(Dom::FORCE_PREFIX . 'ancestor::' . $this->owner()->xPathExpr($expr))->last();
+                return $this->find(array($expr, 'ancestor::*'))->last();
             }
 
             /**
@@ -318,7 +317,7 @@ use volux\Dom;
                 if (is_numeric($selector)) {
                     return $this->childNodes->item((int)$selector);
                 }
-                return $this->find(Dom::FORCE_PREFIX . 'child::' . $this->owner()->xPathExpr($selector));
+                return $this->find(array($selector, 'child::*'));
             }
 
             /**
@@ -385,7 +384,7 @@ use volux\Dom;
                     return $this;
                 }
                 if (is_array($name)) {
-                    foreach ($name as $attr => $val) {
+                    foreach ($name as $attr=>$val) {
                         $this->attr($attr, $val);
                     }
                     return $this;
@@ -533,7 +532,7 @@ use volux\Dom;
                             $text = array_shift($items);
                             $this->a($name)->a($sub, $items, $text);
                         } else {
-                            foreach ($items as $text => $attr) {
+                            foreach ($items as $text=>$attr) {
                                 if (empty($attr)) {
                                     $attr = array();
                                 }

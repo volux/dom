@@ -69,7 +69,7 @@ use volux\Dom;
                 if (!is_null($newText)) {
                     $exitsText = $this->value;
                     if ($exitsText && $add) {
-                        $this->value = $exitsText . $newText;
+                        $this->value = $exitsText.$newText;
                         return $this;
                     }
                     $this->value = $newText;

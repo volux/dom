@@ -13,7 +13,8 @@ use volux\Dom;
         {
             const
                 ELEMENT_CLASS = '\volux\Dom\Node',
-                HEAD_XML = '<?xml version="1.0" encoding="UTF-8"?>';
+                HEAD_XML = '<?xml version="1.0" encoding="UTF-8"?>'
+            ;
 
             /**
              * @param string $version
@@ -85,5 +86,6 @@ use volux\Dom;
                 $this->appendChild($this->createProcessingInstruction('xml-stylesheet', 'type="text/' . $type . '" href="' . $path . '"'));
                 return $this;
             }
+
         }
     }
