@@ -3,10 +3,8 @@ namespace volux\Dom;
 
 {
     /**
-     * @package volux.pro
+     * @package volux\Dom
      * @author  Andrey Skulov <andrey.skulov@gmail.com>
-     *
-     * not finalized. code moved to the Dom.php
      **/
     class XPath {
 
@@ -15,11 +13,11 @@ namespace volux\Dom;
          * @param string $axis
          * @return string
          */
-        public static function fromCSS($expr, $axis)
+        public static function fromCSS($expr, $axis = 'descendant::*')
         {
-            $exprArray = explode('|', str_replace(',', '|', $expr));
+            $exprs = explode('|', str_replace(',', '|', $expr));
             $result = array();
-            foreach ($exprArray as $expr) {
+            foreach ($exprs as $expr) {
                 $result[] = $axis . self::transform($expr);
             }
             $expr = join('|', $result);
@@ -49,31 +47,30 @@ namespace volux\Dom;
                 '`:(link|visited|active|hover|focus)`' => '.\1',
                 '`\[(.*)]`e' => '"[".str_replace(".","`","\1")."]"',
                 // add @ for attribs
-                '`\[([^\]~\$\*\^\|\!]+)(=[^\]]+)?\]`' => "[@\${1}\${2}]",
+                '`\[([^\]~\$\*\^\|\!]*)(=[^\]]+)?\]`' => "[@\${1}\${2}]",
                 // , + ~ >
                 '`\s*(\+|~|>)\s*`' => "\${1}",
-#                '`>`' => '/',
                 //* ~ + >
-                '`([a-zA-Z0-9\_\-\*])~([a-zA-Z0-9\_\-\*])`' => "\${1}/following-sibling::\${2}",
-                '`([a-zA-Z0-9\_\-\*])\+([a-zA-Z0-9\_\-\*])`' => "\${1}/following-sibling::*[1]/self::\${2}",
-                '`([a-zA-Z0-9\_\-\*])>([a-zA-Z0-9\_\-\*])`' => "\${1}/\${2}",
+                '`([a-z0-9\_\-\*]*)~([a-z0-9\_\-\*]*)`i' => "\${1}/following-sibling::\${2}",
+                '`([a-z0-9\_\-\*]*)\+([a-z0-9\_\-\*]*)`i' => "\${1}/following-sibling::*[1]/self::\${2}",
+                '`([a-z0-9\_\-\*]*)>([a-z0-9\_\-\*]*)`i' => "\${1}/\${2}",
                 // all unescaped stuff escaped
                 '`\[([^=]+)=([^\' | "][^\]]*)\]`' => "[\${1}=\"\${2}\"]",
                 // all descendant or self to //
-                '`(^|[^a-zA-Z0-9\_\-\*])(#|\.)([a-zA-Z0-9\_\-]+)`' => "\${1}*\${2}\${3}",
-                '`([\>\+\|\~\,\s])([a-zA-Z\*]+)`' => "\${1}//\${2}",
-                '`\s+\/\/`' => '//',
+                '`(^|[^a-z0-9\_\-\*])(#|\.)([a-z0-9\_\-]+)`i' => "\${1}*\${2}\${3}",
+                '`([\>\+\|\~\,\s])([a-z\*]*)`i' => "\${1}//\${2}",
+                '`\s+\/\/`' => "//",
 
-                '`([a-zA-Z0-9\_\-\*]+):first-child`' => "*[1]/self::\${1}",
-                '`([a-zA-Z0-9\_\-\*]+):last-child`' => "\${1}[not(following-sibling::*)]",
-                '`([a-zA-Z0-9\_\-\*]+):only-child`' => "*[last()=1]/self::\${1}",
-                '`([a-zA-Z0-9\_\-\*]+):empty`' => "\${1}[not(*) and not(normalize-space())]",
+                '`([a-z0-9\_\-\*]*):first-child`i' => "*[1]/self::\${1}",
+                '`([a-z0-9\_\-\*]*):last-child`i' => "\${1}[not(following-sibling::*)]",
+                '`([a-z0-9\_\-\*]*):only-child`i' => "*[last()=1]/self::\${1}",
+                '`([a-z0-9\_\-\*]*):empty`i' => "\${1}[not(*) and not(normalize-space())]",
             );
             $expr = preg_replace(array_keys($patterns), array_values($patterns), trim($expr));
 
             // :not
             $expr = preg_replace_callback(
-                '`([a-zA-Z0-9\_\-\*]+):not\(([^\)]*)\)`',
+                '`([a-z0-9\_\-\*]*):not\(([^\)]*)\)`i',
                 function ($matches) {
                     return $matches[1] . "[not(" . preg_replace('`^[^\[]+\[([^\]]*)\].*$`', "\${1}", self::transform($matches[2])) . ")]";
                 },
@@ -81,7 +78,7 @@ namespace volux\Dom;
             );
             // :nth-child
             $expr = preg_replace_callback(
-                '`([a-zA-Z0-9\_\-\*]+):nth-child\(([^\)]*)\)`',
+                '`([a-z0-9\_\-\*]*):nth-child\(([^\)]*)\)`i',
                 function ($matches) {
 
                     $a = $matches[1];
@@ -111,18 +108,18 @@ namespace volux\Dom;
                 // :contains(selectors)
                 '`:contains\(([^\)]*)\)`' => "[contains(string(.),\"\${1}\")]",
                 // |= attrib
-                '`\[([a-zA-Z0-9\_\-]+)\|=([^\]]+)\]`' => "[@\${1}=\${2} or starts-with(@\${1},concat(\${2},\"-\"))]",
+                '`\[([a-z0-9\_\-]*)\|=([^\]]+)\]`i' => "[@\${1}=\${2} or starts-with(@\${1},concat(\${2},\"-\"))]",
                 // *= attrib
-                '`\[([a-zA-Z0-9\_\-]+)\*=([^\]]+)\]`' => "[contains(@\${1},\${2})]",
+                '`\[([a-z0-9\_\-]*)\*=([^\]]+)\]`i' => "[contains(@\${1},\${2})]",
                 // ~= attrib
-                '`\[([a-zA-Z0-9\_\-]+)~=([^\]]+)\]`' => "[contains(concat(\" \", normalize-space(@\${1}),\" \"),concat(\" \",\${2},\" \"))]",
+                '`\[([a-z0-9\_\-]*)~=([^\]]+)\]`i' => "[contains(concat(\" \", normalize-space(@\${1}),\" \"),concat(\" \",\${2},\" \"))]",
                 // ^= attrib
-                '`\[([a-zA-Z0-9\_\-]+)\^=([^\]]+)\]`' => "[starts-with(@\${1},\${2})]",
+                '`\[([a-z0-9\_\-]*)\^=([^\]]+)\]`i' => "[starts-with(@\${1},\${2})]",
             );
             $expr = preg_replace(array_keys($patterns), array_values($patterns), $expr);
             // $= attrib
             $expr = preg_replace_callback(
-                '`\[([a-zA-Z0-9\_\-]+)\$=([^\]]+)\]`',
+                '`\[([a-z0-9\_\-]*)\$=([^\]]+)\]`i',
                 function ($matches) {
                     return "[substring(@" . $matches[1] . ",string-length(@" . $matches[1] . ")-" . (strlen($matches[2])-3) . ")=" . $matches[2] . "]";
                 },
@@ -130,10 +127,10 @@ namespace volux\Dom;
             );
             $patterns = array(
                 // != attrib
-                '`\[([a-zA-Z0-9\_\-]+)\!=([^\]]+)\]`' => "[not(@\${1}) or @\${1}!=\${2}]",
+                '`\[([a-z0-9\_\-]*)\!=([^\]]+)\]`i' => "[not(@\${1}) or @\${1}!=\${2}]",
                 // ids and classes
-                '`#([a-zA-Z0-9\_\-]+)`' => "[@id=\"\${1}\"]",
-                '`\.([a-zA-Z0-9\_\-]+)`' => "[contains(concat(\" \", normalize-space(@class),\" \"),\" \${1} \")]",
+                '`#([a-z0-9\_\-]*)`i' => "[@id=\"\${1}\"]",
+                '`\.([a-z0-9\_\-]*)`i' => "[contains(concat(\" \", normalize-space(@class),\" \"),\" \${1} \")]",
                 // local-name
                 '`(^([a-z][a-z0-9]*))`i' => "[local-name()=\"\${1}\"]",
                 // normalize multiple filters
