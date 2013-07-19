@@ -4,10 +4,12 @@ namespace volux\Dom;
 use volux\Dom;
 
     {
+
         /**
+         * Class Element
          * @package volux\Dom
          * @author  Andrey Skulov <andrey.skulov@gmail.com>
-         **/
+         */
         class Element extends \DOMElement
         {
             /**

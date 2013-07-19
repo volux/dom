@@ -1,0 +1,23 @@
+{
+    "name": "volux/Dom",
+    "type": "library",
+    "description": "Extended DOM objects with jQuery-like functionality.",
+    "keywords": ["dom", "xml", "php", "jquery"],
+    "homepage": "https://github.com/volux/Dom.git",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Andrey Skulov",
+            "email": "andrey.skulov@gmail.com",
+            "homepage": "http://volux.ru"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0"
+    },
+    "autoload": {
+        "psr-0": {
+            "volux": "lib/"
+        }
+    }
+}

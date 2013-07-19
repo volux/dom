@@ -4,10 +4,12 @@ namespace volux\Dom;
 use volux\Dom;
 
     {
+
         /**
+         * Class Tag
          * @package volux\Dom
          * @author  Andrey Skulov <andrey.skulov@gmail.com>
-         **/
+         */
         class Tag extends Element
         {
 
@@ -24,6 +26,22 @@ use volux\Dom;
                     return json_decode($this->attr($name)->text());
                 }
                 return $this->attr($name, json_encode($value));
+            }
+
+            /**
+             * attribute for AngularJS directive
+             * @param $name
+             * @param null $value
+             *
+             * @return mixed|string|Tag
+             */
+            public function ng($name, $value = null)
+            {
+                $name = 'ng-' . $name;
+                if (is_null($value)) {
+                    return $this->attr($name)->text();
+                }
+                return $this->attr($name, $value);
             }
 
             /**

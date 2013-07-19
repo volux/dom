@@ -6,15 +6,22 @@ use volux\Dom;
     {
 
         /**
+         * Class Xml
          * @package volux\Dom
          * @author  Andrey Skulov <andrey.skulov@gmail.com>
-         **/
+         */
         class Xml extends Dom
         {
             const
                 ELEMENT_CLASS = '\volux\Dom\Node',
                 HEAD_XML = '<?xml version="1.0" encoding="UTF-8"?>'
             ;
+
+            /**
+             * @var Dom\Node
+             */
+            public $documentElement;
+
 
             /**
              * @param string $version

@@ -3,29 +3,29 @@ namespace volux\Dom;
 
 {
     /**
+     * Class XPath
      * @package volux\Dom
      * @author  Andrey Skulov <andrey.skulov@gmail.com>
-     **/
+     */
     class XPath {
 
         /**
-         * @param string $expr
+         * @param string $selectors
          * @param string $axis
+         *
          * @return string
          */
-        public static function fromCSS($expr, $axis = 'descendant::*')
+        public static function fromCSS($selectors, $axis = 'descendant::*')
         {
-            $exprs = explode('|', str_replace(',', '|', $expr));
+            $selectors = explode('|', str_replace(',', '|', $selectors));
             $result = array();
-            foreach ($exprs as $expr) {
-                $result[] = $axis . self::transform($expr);
+            foreach ($selectors as $selector) {
+                $result[] = $axis . self::transform($selector);
             }
-            $expr = join('|', $result);
-
             $correct = array(
                 '**' => '*',
             );
-            return str_replace(array_keys($correct), array_values($correct), $expr);
+            return str_replace(array_keys($correct), array_values($correct), join('|', $result));
         }
 
         /**
@@ -35,6 +35,7 @@ namespace volux\Dom;
          * @see https://code.google.com/p/css2xpath/source/browse/trunk/src/css2xpath.js
          *
          * @param string $expr
+         *
          * @return string
          */
         protected static function transform($expr)
@@ -46,17 +47,17 @@ namespace volux\Dom;
                 '`(?:^|,)#`' => '*#',
                 '`:(link|visited|active|hover|focus)`' => '.\1',
                 '`\[(.*)]`e' => '"[".str_replace(".","`","\1")."]"',
-                // add @ for attribs
+                /* add @ for attribs */
                 '`\[([^\]~\$\*\^\|\!]*)(=[^\]]+)?\]`' => "[@\${1}\${2}]",
-                // , + ~ >
+                /* , + ~ > */
                 '`\s*(\+|~|>)\s*`' => "\${1}",
-                //* ~ + >
+                /* * ~ + > */
                 '`([a-z0-9\_\-\*]*)~([a-z0-9\_\-\*]*)`i' => "\${1}/following-sibling::\${2}",
                 '`([a-z0-9\_\-\*]*)\+([a-z0-9\_\-\*]*)`i' => "\${1}/following-sibling::*[1]/self::\${2}",
                 '`([a-z0-9\_\-\*]*)>([a-z0-9\_\-\*]*)`i' => "\${1}/\${2}",
-                // all unescaped stuff escaped
+                /* all unescaped stuff escaped */
                 '`\[([^=]+)=([^\' | "][^\]]*)\]`' => "[\${1}=\"\${2}\"]",
-                // all descendant or self to //
+                /* all descendant or self to // */
                 '`(^|[^a-z0-9\_\-\*])(#|\.)([a-z0-9\_\-]+)`i' => "\${1}*\${2}\${3}",
                 '`([\>\+\|\~\,\s])([a-z\*]*)`i' => "\${1}//\${2}",
                 '`\s+\/\/`' => "//",
@@ -68,7 +69,7 @@ namespace volux\Dom;
             );
             $expr = preg_replace(array_keys($patterns), array_values($patterns), trim($expr));
 
-            // :not
+            /* :not */
             $expr = preg_replace_callback(
                 '`([a-z0-9\_\-\*]*):not\(([^\)]*)\)`i',
                 function ($matches) {
@@ -76,7 +77,7 @@ namespace volux\Dom;
                 },
                 $expr
             );
-            // :nth-child
+            /* :nth-child */
             $expr = preg_replace_callback(
                 '`([a-z0-9\_\-\*]*):nth-child\(([^\)]*)\)`i',
                 function ($matches) {
@@ -133,7 +134,7 @@ namespace volux\Dom;
                 '`\.([a-z0-9\_\-]*)`i' => "[contains(concat(\" \", normalize-space(@class),\" \"),\" \${1} \")]",
                 // local-name
                 '`(^([a-z][a-z0-9]*))`i' => "[local-name()=\"\${1}\"]",
-                // normalize multiple filters
+                // normalize multiple predicates
                 '`\]\[([^\]]+)`' => " and (\${1})",
                 '/`/' => '.',
             );

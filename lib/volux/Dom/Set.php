@@ -4,10 +4,12 @@ namespace volux\Dom;
 use volux\Dom;
 
     {
+
         /**
+         * Class Set
          * @package volux\Dom
          * @author  Andrey Skulov <andrey.skulov@gmail.com>
-         **/
+         */
         class Set extends \ArrayIterator implements \RecursiveIterator
         {
             /**
@@ -49,7 +51,7 @@ use volux\Dom;
              */
             public function getChildren()
             {
-                return new Set($this->current()->childNodes, $this->dom);
+                return new self($this->current()->childNodes, $this->dom);
             }
 
             /**
@@ -166,9 +168,7 @@ use volux\Dom;
             {
                 $comparator = function (Element $a, Element $b) use ($xPath) {
                     $aValue = $a->find($xPath, 0)->text();
-                    #var_dump($aValue);
                     $bValue = $b->find($xPath, 0)->text();
-                    #var_dump($bValue);
                     if (!is_numeric($aValue)) {
                         return strcasecmp($aValue, $bValue);
                     }
@@ -177,7 +177,6 @@ use volux\Dom;
                     }
                     return ($aValue < $bValue) ? -1 : 1;
                 };
-                #var_dump($iterator);
                 $this->uasort($comparator);
                 return $this;
             }
@@ -194,7 +193,7 @@ use volux\Dom;
                 $nodeset = array();
                 foreach ($this as $node) {
                     /** @var $select Node */
-                    $select = $node->$method($xPath);
+                    $select = call_user_func(array($node, $method), $xPath);
                     if (is_object($select)) {
                         if (!$select->isEmpty()) {
                             $nodeset[] = $node;
@@ -205,7 +204,7 @@ use volux\Dom;
                         }
                     }
                 }
-                return new Set($nodeset, $this->dom);
+                return new self($nodeset, $this->dom);
             }
 
             /**
@@ -227,15 +226,17 @@ use volux\Dom;
             }
 
             /**
-             * @param $name
+             * Invoke $method for each node in Set
+             *
+             * @param $method
              * @param array $args
              *
              * @return Set
              */
-            public function __call($name, array $args)
+            public function __call($method, array $args)
             {
                 foreach ($this as $node) {
-                    call_user_func_array(array($node, $name), $args);
+                    call_user_func_array(array($node, $method), $args);
                 }
                 return $this;
             }

@@ -4,9 +4,10 @@ namespace volux;
 {
 
     /**
-     * @package volux.pro
+     * Class Dom
      * @author  Andrey Skulov <andrey.skulov@gmail.com>
-     **/
+     * @package volux
+     */
     class Dom extends \DOMDocument
     {
         const
@@ -26,6 +27,10 @@ namespace volux;
          * @var Dom\Element
          */
         protected $contextElement;
+        /**
+         * @var Dom\Element
+         */
+        public $documentElement;
 
         public function __construct($version = self::VERSION, $encoding = self::ENCODING)
         {
@@ -83,6 +88,15 @@ namespace volux;
         }
 
         /**
+         * @param $node Dom\Element
+         * @return Dom\Element
+         */
+        public function appendTo(Dom\Element $node)
+        {
+            return $node->append($this->root());
+        }
+
+        /**
          * @param string|array $expr
          * @param null $index
          * @param null $context
@@ -125,8 +139,9 @@ namespace volux;
         public function notEmpty($node, $expr = null)
         {
             if (empty($node)) {
-                $this->root()->append($this->createComment(' '. static::NAME_NOT_MATCHED.' by "'. $expr.'" '));
-                $node = $this->createNode(static::NAME_NOT_MATCHED, $expr);
+                $contextPath = $this->context()->getNodePath();
+                $this->root()->append($this->createComment(' '. static::NAME_NOT_MATCHED . ' by "' . $contextPath . $expr . '" '));
+                $node = $this->createNode(static::NAME_NOT_MATCHED, $contextPath . $expr);
             }
             return $node;
         }

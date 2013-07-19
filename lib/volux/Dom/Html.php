@@ -6,9 +6,10 @@ use volux\Dom;
     {
 
         /**
+         * Class Html
          * @package volux\Dom
          * @author  Andrey Skulov <andrey.skulov@gmail.com>
-         **/
+         */
         class Html extends Dom
         {
             const
@@ -21,6 +22,12 @@ use volux\Dom;
             protected $scripts;
             protected $trash;
             protected $ajax;
+
+            /**
+             * @var Dom\Tag
+             */
+            public $documentElement;
+
 
             public function __construct($version = self::VERSION, $encoding = self::ENCODING)
             {
@@ -59,7 +66,10 @@ use volux\Dom;
                     $this->preserveWhiteSpace = false;
                     $this->recover = true;
                     $this->loadHTML(mb_convert_encoding((string)$htmlString, 'HTML-ENTITIES', self::ENCODING));
-                    return $this->setXPath();
+                    $this->setXPath();
+                    $this->head = $this->root()->find('head')->first();
+                    $this->body = $this->root()->find('body')->first();
+                    return $this;
                 }
                 if ($normalize) {
                     $imp = new \DOMImplementation();
@@ -67,6 +77,14 @@ use volux\Dom;
                     $doc->formatOutput = true;
                     $doc->preserveWhiteSpace = false;
                     $doc->encoding = self::ENCODING;
+
+                    if ($this->ajax->childNodes->length) {
+                        $doc->documentElement->appendChild($doc->importNode($this->ajax, true));
+                        return $doc->saveXML($this->ajax);
+                    }
+                    if ($this->scripts->childNodes->length) {
+                        $this->scripts->children()->appendTo('html');
+                    }
                     foreach ($this->documentElement->childNodes as $node) {
                         $doc->documentElement->appendChild($doc->importNode($node, true));
                     }
@@ -156,16 +174,21 @@ use volux\Dom;
             /**
              * @param $uri
              * @param null $code
+             * @param boolean $inHead
              *
              * @return Html
              */
-            public function script($uri, $code = null)
+            public function script($uri, $code = null, $inHead = false)
             {
+                $to = $this->scripts;
+                if ($inHead) {
+                    $to = $this->head;
+                }
                 if (!empty($uri)) {
-                    $this->scripts->append('script')->attr('src', $uri)->text(false);
+                    $to->append('script')->attr('src', $uri)->text(false);
                 }
                 if (!is_null($code)) {
-                    $this->scripts->append('script')->add(PHP_EOL.$code.PHP_EOL);
+                    $to->append('script')->add(PHP_EOL.$code.PHP_EOL);
                 }
                 return $this;
             }
@@ -175,13 +198,6 @@ use volux\Dom;
              */
             public function __toString()
             {
-                if ($this->ajax->childNodes->length) {
-                    $this->root()->append($this->ajax);
-                    return $this->saveXML($this->ajax);
-                }
-                if ($this->scripts->childNodes->length) {
-                    $this->scripts->children()->appendTo('body');
-                }
                 return $this->html(null, true, true);
             }
         }

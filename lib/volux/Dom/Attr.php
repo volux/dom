@@ -4,10 +4,12 @@ namespace volux\Dom;
 use volux\Dom;
 
     {
+
         /**
-         * @package volux\Dom
+         * Class Attr
          * @author  Andrey Skulov <andrey.skulov@gmail.com>
-         **/
+         * @package volux\Dom
+         */
         class Attr extends \DOMAttr
         {
 
