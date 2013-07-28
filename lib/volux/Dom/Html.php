@@ -17,27 +17,43 @@ use volux\Dom;
                 HEAD_HTML = '<!DOCTYPE html>'
             ;
 
+            /** @var Dom\Tag */
             protected $head;
+            /** @var Dom\Tag */
             protected $body;
+            /** @var Dom\Tag */
             protected $scripts;
+            /** @var Dom\Tag */
             protected $trash;
+            /** @var Dom\Tag */
             protected $ajax;
 
             /**
-             * @var Dom\Tag
+             * @param string $version
+             * @param string $encoding
              */
-            public $documentElement;
-
-
             public function __construct($version = self::VERSION, $encoding = self::ENCODING)
             {
                 parent::__construct($version, $encoding);
+
                 $this->root('html');
                 $this->head = $this->root()->append('head')->text(false);
                 $this->body = $this->root()->append('body')->text(false);
-                $this->scripts = $this->createNode('scripts');
-                $this->trash = $this->createNode('trash');
-                $this->ajax = $this->createNode('reply');
+                $this->scripts = $this->createElement('scripts');
+                $this->trash = $this->createElement('trash');
+                $this->ajax = $this->createElement('reply');
+            }
+
+            /**
+             * @param null   $ns
+             * @param string $qualifiedName
+             * @param string $docType
+             *
+             * @return \DOMDocument
+             */
+            public function implementation($ns = null, $qualifiedName = 'html', $docType = 'html')
+            {
+                return parent::implementation(null, $qualifiedName, $docType);
             }
 
             /**
@@ -53,6 +69,23 @@ use volux\Dom;
             }
 
             /**
+             * @param array $array
+             *
+             * @return Html|Dom\Tag
+             */
+            public function createFromArray(array $array)
+            {
+                $html = self::doc();
+                $html->removeChild($html->documentElement);
+                $result = $this->createDomFromArray($array, $html);
+                if ($result instanceof Html) {
+                    $result->head = $result->root()->find('head', 0);
+                    $result->body = $result->root()->find('body', 0);
+                }
+                return $result;
+            }
+
+            /**
              * @param null $htmlString
              * @param bool $normalize output doctype defined document
              * @param bool $asXml
@@ -62,43 +95,49 @@ use volux\Dom;
             public function html($htmlString = null, $normalize = false, $asXml = false)
             {
                 if (!is_null($htmlString)) {
-                    libxml_use_internal_errors(true);
-                    $this->preserveWhiteSpace = false;
-                    $this->recover = true;
-                    $this->loadHTML(mb_convert_encoding((string)$htmlString, 'HTML-ENTITIES', self::ENCODING));
-                    $this->setXPath();
-                    $this->head = $this->root()->find('head')->first();
-                    $this->body = $this->root()->find('body')->first();
+                    $this->loadHTML($htmlString);
+                    if ($normalize) {
+                        $this->normalizeDocument();
+                    }
+                    $this->head = $this->root()->find('head', 0);
+                    $this->body = $this->root()->find('body', 0);
                     return $this;
                 }
-                if ($normalize) {
-                    $imp = new \DOMImplementation();
-                    $doc = $imp->createDocument(null, 'html', $imp->createDocumentType('html'));
-                    $doc->formatOutput = true;
-                    $doc->preserveWhiteSpace = false;
-                    $doc->encoding = self::ENCODING;
 
-                    if ($this->ajax->childNodes->length) {
-                        $doc->documentElement->appendChild($doc->importNode($this->ajax, true));
-                        return $doc->saveXML($this->ajax);
+                if ($this->ajax->childNodes->length) {
+
+                    $this->scripts->children()->appendTo($this->ajax);
+
+                    $this->documentElement->appendChild($this->importNode($this->ajax, true));
+
+                    if ($asXml) {
+                        return $this->saveXML($this->ajax);
                     }
-                    if ($this->scripts->childNodes->length) {
-                        $this->scripts->children()->appendTo('html');
-                    }
-                    foreach ($this->documentElement->childNodes as $node) {
-                        $doc->documentElement->appendChild($doc->importNode($node, true));
-                    }
+                    return $this->saveHTML($this->ajax);
+                }
+
+                $this->scripts->children()->appendTo($this->body);
+
+                if ($normalize) {
+
+                    $doc = $this->implementation();
+
+                    $this->documentElement->children()->appendTo($doc->documentElement);
                     foreach ($this->documentElement->attributes as $attr) {
                         /** @var $attr Attr */
                         $doc->documentElement->setAttribute($attr->name, $attr->value);
                     }
                     if ($asXml) {
-                        return $doc->saveXML();
+#                    return $doc->saveXML();
+                        return substr($doc->saveXML(), strlen($this->headString())+1); /** :-/ */
                     }
                     return $doc->saveHTML();
                 }
                 /* or easy way: */
-                return self::HEAD_HTML.PHP_EOL.$this->saveHTML($this->root()) . PHP_EOL;
+                if ($asXml) {
+                    return self::HEAD_HTML.PHP_EOL.$this->saveXML($this->documentElement);
+                }
+                return self::HEAD_HTML.PHP_EOL.$this->saveHTML($this->documentElement);
             }
 
             /**
@@ -132,7 +171,7 @@ use volux\Dom;
             /**
              * @param array $content
              *
-             * @return Html
+             * @return $this|Html
              */
             public function meta(array $content)
             {
@@ -143,7 +182,7 @@ use volux\Dom;
             /**
              * @param $title
              *
-             * @return Html
+             * @return $this|Html
              */
             public function title($title)
             {
@@ -152,18 +191,19 @@ use volux\Dom;
             }
 
             /**
-             * @param $uri
+             * @param        $uri
+             * @param string $type
              *
-             * @return Html
+             * @return $this|Html
              */
-            public function stylesheet($uri)
+            public function stylesheet($uri, $type = 'stylesheet')
             {
                 $this->head->append('link')->attr(array('href' => $uri, 'rel' => 'stylesheet'));
                 return $this;
             }
 
             /**
-             * @return Html
+             * @return $this|Html
              */
             public function favicon()
             {
@@ -176,7 +216,7 @@ use volux\Dom;
              * @param null $code
              * @param boolean $inHead
              *
-             * @return Html
+             * @return $this|Html
              */
             public function script($uri, $code = null, $inHead = false)
             {
@@ -198,7 +238,7 @@ use volux\Dom;
              */
             public function __toString()
             {
-                return $this->html(null, true, true);
+                return $this->html(null, false, false);
             }
         }
     }

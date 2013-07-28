@@ -7,8 +7,8 @@ use volux\Dom;
 
         /**
          * Class Attr
-         * @author  Andrey Skulov <andrey.skulov@gmail.com>
          * @package volux\Dom
+         * @author  Andrey Skulov <andrey.skulov@gmail.com>
          */
         class Attr extends \DOMAttr
         {
@@ -21,9 +21,9 @@ use volux\Dom;
             public function is($expr)
             {
                 if ($expr{0} == '@') {
-                    return ($expr === $this->name);
+                    return ($expr === '@'.$this->nodeName);
                 }
-                return ($expr === $this->value);
+                return ($expr === $this->nodeValue);
             }
 
             /**
@@ -31,7 +31,7 @@ use volux\Dom;
              */
             public function isEmpty()
             {
-                return (Dom::NAME_NOT_MATCHED === $this->name);
+                return (Dom::NAME_NOT_MATCHED === $this->nodeName) or ($this->nodeValue === '');
             }
 
             /**
@@ -43,7 +43,7 @@ use volux\Dom;
             }
 
             /**
-             * @return Element
+             * @return Element|Tag
              */
             protected function parent()
             {
@@ -51,7 +51,17 @@ use volux\Dom;
             }
 
             /**
-             * @return Element
+             * @param bool $deep
+             *
+             * @return Attr
+             */
+            public function copy($deep = true)
+            {
+                return $this->cloneNode($deep);
+            }
+
+            /**
+             * @return Element|Tag
              */
             public function remove()
             {
@@ -69,15 +79,23 @@ use volux\Dom;
             public function text($newText = null, $add = false)
             {
                 if (!is_null($newText)) {
-                    $exitsText = $this->value;
+                    $exitsText = $this->nodeValue;
                     if ($exitsText && $add) {
-                        $this->value = $exitsText.$newText;
+                        $this->nodeValue = $exitsText.$newText;
                         return $this;
                     }
-                    $this->value = $newText;
+                    $this->nodeValue = $newText;
                     return $this;
                 }
-                return $this->value;
+                return $this->nodeValue;
+            }
+
+            /**
+             * @return array
+             */
+            public function toArray()
+            {
+                return array($this->nodeName => $this->nodeValue);
             }
 
             /**
@@ -85,7 +103,7 @@ use volux\Dom;
              */
             public function __toString()
             {
-                return $this->value;
+                return $this->nodeValue;
             }
         }
     }

@@ -13,21 +13,29 @@ use volux\Dom;
         class Set extends \ArrayIterator implements \RecursiveIterator
         {
             /**
-             * @var Dom
+             * @var Dom|Html
              */
-            protected $dom;
+            protected $ownerDocument;
             /**
              * @param \DOMNodelist|\DOMNamedNodeMap|Set|array $nodeList
              * @param Dom $dom
              */
             public function __construct($nodeList, Dom &$dom)
             {
-                $this->dom = $dom;
+                $this->ownerDocument = $dom;
                 $nodes = array();
                 foreach ($nodeList as $node) {
                     $nodes[] = $node;
                 }
                 parent::__construct($nodes);
+            }
+
+            /**
+             * @return Dom|Html
+             */
+            public function owner()
+            {
+                return $this->ownerDocument;
             }
 
             /**
@@ -51,7 +59,7 @@ use volux\Dom;
              */
             public function getChildren()
             {
-                return new self($this->current()->childNodes, $this->dom);
+                return new self($this->current()->childNodes, $this->owner());
             }
 
             /**
@@ -70,14 +78,13 @@ use volux\Dom;
 
             /**
              * <code> while ($node = $set->sequent()) { $node } </code>
-             * @return Tag|Node|Attr
+             * @return Element|Tag|Attr|Text|Cdata
              */
             public function sequent()
             {
+                $this->next();
                 if ($this->valid()) {
-                    $next = $this->current();
-                    $this->next();
-                    return $next;
+                    return $this->current();
                 }
                 $this->rewind();
                 return false;
@@ -86,34 +93,34 @@ use volux\Dom;
             /**
              * @param $offset
              *
-             * @return Tag|Node|Attr
+             * @return Element|Tag|Attr|Text|Cdata
              */
             public function eq($offset)
             {
                 if ($this->count() < $offset) {
-                    return $this->dom->notEmpty(false, 'Set::eq()');
+                    return $this->owner()->notEmpty(false, '=Set::eq()');
                 }
                 return $this->offsetGet($offset);
             }
 
             /**
-             * @return Tag|Node|Attr
+             * @return Element|Tag|Attr|Text|Cdata
              */
             public function first()
             {
                 if ($this->count() == 0) {
-                    return $this->dom->notEmpty(false, 'Set::first()');
+                    return $this->owner()->notEmpty(false, '=Set::first()');
                 }
                 return $this->offsetGet(0);
             }
 
             /**
-             * @return Tag|Node|Attr
+             * @return Element|Tag|Attr
              */
             public function last()
             {
                 if ($this->count() == 0) {
-                    return $this->dom->notEmpty(false, 'Set::last()');
+                    return $this->owner()->notEmpty(false, '=Set::last()');
                 }
                 $offset = $this->count()-1;
                 return $this->offsetGet($offset);
@@ -152,6 +159,22 @@ use volux\Dom;
             }
 
             /**
+             * @param string|Element|Tag $target
+             *
+             * @return $this
+             */
+            public function appendTo(&$target)
+            {
+                if (is_string($target)) {
+                    $target = $this->owner()->createElement($target);
+                }
+                foreach ($this as $node) {
+                    $target->append($node);
+                }
+                return $this;
+            }
+
+            /**
              * @return bool
              */
             public function isEmpty()
@@ -182,29 +205,20 @@ use volux\Dom;
             }
 
             /**
-             * @param string $xPath
-             * @param string $method
-             * @param bool $compare
+             * @param $selector
              *
              * @return Set
              */
-            public function select($xPath, $method = 'node', $compare = null)
+            public function filter($selector)
             {
                 $nodeset = array();
                 foreach ($this as $node) {
-                    /** @var $select Node */
-                    $select = call_user_func(array($node, $method), $xPath);
-                    if (is_object($select)) {
-                        if (!$select->isEmpty()) {
-                            $nodeset[] = $node;
-                        }
-                    } else {
-                        if ($compare == $select) {
-                            $nodeset[] = $node;
-                        }
+                    /** @var $node Element|Tag|Attr|Text|Cdata */
+                    if ($node->is($selector)) {
+                        $nodeset[] = $node;
                     }
                 }
-                return new self($nodeset, $this->dom);
+                return new self($nodeset, $this->owner());
             }
 
             /**
@@ -216,13 +230,28 @@ use volux\Dom;
              *
              * @return \ArrayIterator
              */
-            public function map($method = 'text', $key = 'name', $arg = null)
+            public function map($method = 'text', $key = 'getNodePath', $arg = null)
             {
                 $array = array();
                 foreach ($this as $node) {
+                    /** @var $node Element|Tag|Attr|Text|Cdata */
                     $array[$node->$key()] = $node->$method($arg);
                 }
                 return new \ArrayIterator($array);
+            }
+
+            /**
+             * @param string $xslFile
+             * @param array $xsltParameters
+             *
+             * @return $this
+             */
+            public function transform($xslFile, $xsltParameters = array())
+            {
+                foreach ($this as $node) {
+                    $this->owner()->transform($xslFile, $xsltParameters, $node);
+                }
+                return $this;
             }
 
             /**
@@ -236,6 +265,7 @@ use volux\Dom;
             public function __call($method, array $args)
             {
                 foreach ($this as $node) {
+                    /** @var $node Element|Tag|Attr|Text|Cdata */
                     call_user_func_array(array($node, $method), $args);
                 }
                 return $this;
@@ -248,6 +278,7 @@ use volux\Dom;
             {
                 $string = '';
                 foreach ($this as $node) {
+                    /** @var $node Element|Tag|Attr|Text|Cdata */
                     $string .= (string)$node. PHP_EOL . PHP_EOL;
                 }
                 return $string;
