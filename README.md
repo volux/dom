@@ -57,7 +57,7 @@ $html->body()
 		->attr('class', '3')
 		->text('1. Text with <em>entity</em><br>and ')
 		->add('<a href="#"><i class="icon-2"> </i>valid xml	1</a>.')
-		->text(' And<br>any more text 1.', true)
+		->text(' And<br>any more text 1.') /** text add as default */
 		->before('h1')
 			->add('Value with<br><span class=test>not valid xml</span>');
 
@@ -119,4 +119,19 @@ if ($request) {
 }
 
 echo $htmlResult->title('Google News')->html(null, true, true);
+```
+
+### XSLT transform example
+
+```php
+<?php
+
+use volux\Dom;
+
+$html = new Dom\Html();
+
+$html->load('example.html');
+$html->find('.content')->transform('xslt/content.xsl'); /** each .content tag transform (and replace) */
+
+$html->saveHTMLfile('transformed.html');
 ```
