@@ -1,6 +1,10 @@
 ## volux\Dom
 
-php 5.3 extended DOM Objects (DOMDocument, DOMAttr and DOMElement, wrapped DOMNodelist and DOMNamedNodeMap) via DOMDocument::registerNodeClass with jQuery-like functionality.
+PHP version >= 5.3.6 extended DOM Objects via \DOMDocument::registerNodeClass with jQuery-like functionality:
+    - volux\Dom > \DOMDocument, volux\Attr > \DOMAttr, volux\Tag > volux\Element > \DOMElement, volux\Text > \DOMText, volux\Comment > \DOMComment, volux\Cdata > \DOMCdataSection;
+    - extended \DOMXPath via volux\XPath with converting CSS selectors to XPath expression;
+    - volux\Xslt class implement shadow load XSLT file or XSLT string (including from lambda function) and transformation with replacing target element;
+    - wrapped DOMNodelist and DOMNamedNodeMap with volux\Set who inplement \ArrayIterator and \RecursiveIterator interfaces.
 
 ### Build html example
 
@@ -21,7 +25,7 @@ $html
 		'name' => 'viewport',
 		'content' => 'width=device-width,user-scalable=0',
 	))
-	->title('Test')
+	->title('Build HTML Test')
 	->stylesheet('//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css')
 	->script('//cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js')
 	->stylesheet('/css/app.css')
@@ -40,15 +44,7 @@ $navBarInner = $html->body()
 			->a('li', array('class'=>'divider-vertical'), false)
 		->parent()
 	->parent();
-/**
-* you can use $navBarInner for add some element later:
-* for example $navBarInner->add(file_get_contents($templateDir.'menu.html'))
-* or $navBarInner->a('ul', array('class' => 'nav'))
-* 		->l('li', array(
-*      	array('>' => 'a', 'First', 'href' => '/item1'),
-*      	array('>' => 'a', 'Second', 'href' => '/item2'),
-*  	));
-*/
+
 $html->body()
 	->append('div')->attr('id', 'main')
 	->addClass('some test content') # for example
@@ -57,11 +53,22 @@ $html->body()
 		->attr('class', '3')
 		->text('1. Text with <em>entity</em><br>and ')
 		->add('<a href="#"><i class="icon-2"> </i>valid xml	1</a>.')
-		->text(' And<br>any more text 1.') /** text add as default */
+		->text(' And<br>any more text 1.') /* text is added by default */
 		->before('h1')
 			->add('Value with<br><span class=test>not valid xml</span>');
 
 echo $html;
+/**
+* you can use $navBarInner for add some element later:
+*
+* for example $navBarInner->add(file_get_contents($templateDir.'menu.html'))
+*
+* or $navBarInner->a('ul', array('class' => 'nav'))
+*     ->l('li', array(
+*      	  array('>' => 'a', 'First', 'href' => '/item1'),
+*      	  array('>' => 'a', 'Second', 'href' => '/item2'),
+*     ));
+*/
 ```
 Result:
 ```html
@@ -71,7 +78,7 @@ Result:
     	<meta charset="UTF-8"/>
     	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
     	<meta name="viewport" content="width=device-width,user-scalable=0"/>
-    	<title>Test</title>
+    	<title>Build HTML Test</title>
     	<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css" rel="stylesheet"/>
     	<link href="/css/app.css" rel="stylesheet"/>
   	</head>
@@ -87,7 +94,7 @@ Result:
 </html>
 ```
 
-### Parse html example
+### Parse external html example
 
 ```php
 <?php
@@ -98,27 +105,29 @@ $htmlResult = new Dom\Html();
 $request = file_get_contents('http://news.google.com/news');
 /** You can use any transport for retrieve outer site content like curl */
 
+$htmlResult = new Dom\Html();
+$htmlResult->title('Google News Test');
+
 if ($request) {
 
-    $htmlRequest = new Dom\Html();
-    $htmlRequest->html($request)
-        ->root()
-            ->find('.titletext')
-                ->each(function ($node, $index) use ($htmlResult) {
-                    /** @var $node Dom\Tag */
-                    $htmlResult->body()
-                        ->append('p')
-                            ->append('span')->text(($index + 1) . ': ')
-                        ->parent()
-                            ->append('a')->attr('href', $node->parent()->attr('href'))->text($node->text());
-                });
+	$htmlRequest = new Dom\Html();
+	$htmlRequest->html($request)
+	    ->find('.titletext')
+	        ->each(function (Dom\Tag $node, $index) use ($htmlResult) {
+	            /** @var $node Dom\Tag */
+	            $htmlResult->body()
+	                ->append('p')
+	                    ->append('span')->text(($index + 1) . ': ')
+	                ->parent()
+	                    ->append('a')->attr('href', $node->parent()->attr('href'))->text($node->text());
+	        });
 
 } else {
 
-    $htmlResult->body()->append('div', array('class'=>'empty'), 'Empty request result');
+	$htmlResult->body()->append('div', array('class'=>'empty'), 'Request to Google is empty');
 }
 
-echo $htmlResult->title('Google News')->html(null, true, true);
+echo $htmlResult;
 ```
 
 ### XSLT transform example
@@ -131,7 +140,7 @@ use volux\Dom;
 $html = new Dom\Html();
 
 $html->load('example.html');
-$html->find('.content')->transform('xslt/content.xsl'); /** each .content tag transform (and replace) */
+$html->find('.content')->transform('xslt/content.xsl'); /* each tags with class="content" will be transformed and replaced */
 
 $html->saveHTMLfile('transformed.html');
 ```
