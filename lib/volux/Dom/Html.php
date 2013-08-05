@@ -122,14 +122,17 @@ use volux\Dom;
 
                     $doc = $this->implementation();
 
-                    $this->documentElement->children()->appendTo($doc->documentElement);
+                    foreach ($this->documentElement->childNodes as $child) {
+                        /** @var $child Tag */
+                        $doc->documentElement->appendChild($doc->importNode($child, true));
+                    }
                     foreach ($this->documentElement->attributes as $attr) {
                         /** @var $attr Attr */
                         $doc->documentElement->setAttribute($attr->name, $attr->value);
                     }
                     if ($asXml) {
-#                    return $doc->saveXML();
-                        return substr($doc->saveXML(), strlen($this->headString())+1); /** :-/ */
+                        return $doc->saveXML();
+#                    return substr($doc->saveXML(), strlen($this->headString())+1); /** :-/ */
                     }
                     return $doc->saveHTML();
                 }
@@ -138,6 +141,29 @@ use volux\Dom;
                     return self::HEAD_HTML.PHP_EOL.$this->saveXML($this->documentElement);
                 }
                 return self::HEAD_HTML.PHP_EOL.$this->saveHTML($this->documentElement);
+            }
+
+            /**
+             * @param string|callable $source
+             * @param int|null $options
+             *
+             * @return bool
+             */
+            public function load($source, $options = LIBXML_NOCDATA)
+            {
+                if (is_callable($source)) {
+                    /**
+                     * @todo point to precompile source
+                     */
+                    $source = $source();
+                } else
+                    if (is_file($source)) {
+                        $source = file_get_contents($source, FILE_USE_INCLUDE_PATH);
+                    }
+                if ($source) {
+                    return $this->loadHTML($source, $options);
+                }
+                return false;
             }
 
             /**
@@ -228,7 +254,7 @@ use volux\Dom;
                     $to->append('script')->attr('src', $uri)->text(false);
                 }
                 if (!is_null($code)) {
-                    $to->append('script')->add(PHP_EOL.$code.PHP_EOL);
+                    $to->append('script')->append($this->createText($code));
                 }
                 return $this;
             }
@@ -238,7 +264,7 @@ use volux\Dom;
              */
             public function __toString()
             {
-                return $this->html(null, false, false);
+                return $this->html(null, false, true);
             }
         }
     }

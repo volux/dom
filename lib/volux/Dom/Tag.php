@@ -74,7 +74,7 @@ use volux\Dom;
             {
                 if (!is_null($html)) {
                     $this->clear();
-                    return $this->add($html);
+                    return $this->append($html);
                 }
                 return (string)$this->children();
             }

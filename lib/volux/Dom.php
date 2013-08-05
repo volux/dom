@@ -79,7 +79,6 @@ namespace volux;
             $doc->formatOutput = true;
             $doc->preserveWhiteSpace = false;
             $doc->substituteEntities = true;
-            $doc->xmlEncoding = self::ENCODING;
 
             return $doc;
         }
@@ -100,31 +99,39 @@ namespace volux;
         }
 
         /**
-         * @param string $filename
-         * @param null   $options
+         * @param string|callable $source
+         * @param int|null $options
          *
          * @return bool
          */
-        public function load($filename, $options = null)
+        public function load($source, $options = LIBXML_NOCDATA)
         {
-            $this->preserveWhiteSpace = false;
-            $this->recover = true;
-            $result = parent::load($filename, $options);
-            $this->setXPath($this);
-            return $result;
+            if (is_callable($source)) {
+                /**
+                 * @todo point to precompile source
+                 */
+                $source = $source();
+            } else
+                if (is_file($source)) {
+                    $source = file_get_contents($source, FILE_USE_INCLUDE_PATH);
+                }
+            if ($source) {
+                return $this->loadXML($source, $options);
+            }
+            return false;
         }
 
         /**
-         * @param string $source
-         * @param null   $options
+         * @param string   $source
+         * @param int|null $options
          *
-         * @return bool
+         * @return mixed
          */
-        public function loadXML($source, $options = null)
+        public function loadXML($source, $options = LIBXML_NOCDATA)
         {
             $this->preserveWhiteSpace = false;
             $this->recover = true;
-            $result = parent::loadXML($source, $options);
+            $result = parent::loadXML(html_entity_decode($source, ENT_NOQUOTES, $this->xmlEncoding), $options);
             $this->setXPath($this);
             return $result;
         }
@@ -255,7 +262,7 @@ namespace volux;
         {
             if (empty($node)) {
                 $contextPath = $this->context()->getNodePath();
-                $this->contextElement->prepend($this->createComment(self::NAME_NOT_MATCHED . ' by "' . $contextPath . '/'. $expr . '"'));
+                $this->contextElement->prepend($this->createComment(self::NAME_NOT_MATCHED . ' by "' . $contextPath . SL. $expr . '"'));
                 $node = $this->createElement(self::NAME_NOT_MATCHED, $contextPath . $expr);
             }
             return $node;
@@ -334,13 +341,15 @@ namespace volux;
          */
         public function createElement($name, $value = null)
         {
-            if (!is_bool(mb_strpos($name, '<'))) {
-                $this->createFragment($name, $node);
+            if (!is_bool(strpos($name, '<'))) {
+                if (!$this->createFragment($name, $node)) {
+                    $node = $this->createText($name);
+                }
             } else {
                 $node = parent::createElement($name);
             }
-            if (!empty($value)) {
-                $node->nodeValue = $value;
+            if (!is_null($value)) {
+                $node->nodeValue = (string)$value;
             }
             return $node;
         }

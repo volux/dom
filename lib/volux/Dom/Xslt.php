@@ -31,29 +31,6 @@ use volux\Dom;
             }
 
             /**
-             * @param string|callable $source
-             * @param int|null $options
-             *
-             * @return bool
-             */
-            public function load($source, $options = LIBXML_NOCDATA)
-            {
-                if (is_callable($source)) {
-                    /**
-                     * @todo point to precompile xslt
-                     */
-                    $source = $source();
-                } else
-                    if (is_file($source)) {
-                        $source = file_get_contents($source, FILE_USE_INCLUDE_PATH);
-                    }
-                if ($source) {
-                    return $this->loadXML($source, $options);
-                }
-                return false;
-            }
-
-            /**
              * @param string   $source
              * @param int|null $options
              *
@@ -61,7 +38,7 @@ use volux\Dom;
              */
             public function loadXML($source, $options = LIBXML_NOCDATA)
             {
-                $result = parent::loadXML(html_entity_decode($source, ENT_NOQUOTES, $this->xmlEncoding), $options);
+                $result = parent::loadXML($source, $options);
                 $this->processor();
                 return $result;
             }

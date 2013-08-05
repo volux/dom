@@ -2,7 +2,7 @@
     "name": "volux/Dom",
     "type": "library",
     "description": "Extended DOM objects with jQuery-like functionality.",
-    "keywords": ["dom", "xml", "php", "jquery"],
+    "keywords": ["dom", "xml", "xpath", "xslt", "php", "jquery"],
     "homepage": "https://github.com/volux/Dom.git",
     "license": "MIT",
     "authors": [
@@ -12,12 +12,19 @@
             "homepage": "http://volux.ru"
         }
     ],
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/volux/Dom.git"
+        }
+    ],
     "require": {
-        "php": ">=5.3.6"
+        "php": ">=5.3.6",
+        "ext-xsl": "*"
     },
     "autoload": {
         "psr-0": {
-            "volux": "lib/"
+            "volux\\": "lib/"
         }
     }
 }

@@ -40,7 +40,7 @@ use volux\Dom;
             {
                 $row = $this->head->append('tr');
                 foreach($head as $value) {
-                    $row->append('th')->add($value);
+                    $row->append('th')->append($value);
                 }
                 return $this;
             }
@@ -54,7 +54,7 @@ use volux\Dom;
                 foreach($body as $rowValues) {
                     $row = $this->body->append('tr');
                     foreach($rowValues as $value) {
-                        $row->append('td')->add($value);
+                        $row->append('td')->append($value);
                     }
                 }
                 return $this;
@@ -65,7 +65,7 @@ use volux\Dom;
              */
             public function __toString()
             {
-                return $this->saveHTML($this->root()) . PHP_EOL;
+                return $this->saveXML($this->documentElement) . PHP_EOL;
             }
         }
     }

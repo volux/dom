@@ -21,7 +21,7 @@ use volux\Dom;
             {
                 if (!is_null($xml)) {
                     $this->clear();
-                    return $this->add($xml);
+                    return $this->append($xml);
                 }
                 return (string)$this->children();
             }
@@ -508,21 +508,6 @@ use volux\Dom;
             }
 
             /**
-             * @param $xml
-             *
-             * @return $this|Element|Tag
-             */
-            public function add($xml)
-            {
-                $xml = (string)$xml;
-                if ($this->owner()->createFragment($xml, $fragment)) {
-                    $this->append($fragment);
-                    return $this;
-                }
-                return $this->text($xml);
-            }
-
-            /**
              * @param $expr
              * @param null $index
              * @param null $context
@@ -538,6 +523,26 @@ use volux\Dom;
             }
 
             /**
+             * @param      $source
+             * @param callable|null $callback
+             *
+             * @return $this
+             */
+            public function load($source, $callback = null)
+            {
+                if (is_file($source)) {
+                    $source = file_get_contents($source, FILE_USE_INCLUDE_PATH);
+                }
+                if ($source) {
+                    $appended = $this->append($source);
+                    if (is_callable($callback)) {
+                        $callback($appended);
+                    }
+                }
+                return $this;
+            }
+
+            /**
              * @param $name
              * @param array $attr
              * @param string $text
@@ -549,7 +554,7 @@ use volux\Dom;
                 if (empty($name)) {
                     return $this;
                 }
-                return $this->appendChild($this->owner()->createElement($name)->attr($attr)->add($text));
+                return $this->appendChild($this->owner()->createElement($name)->attr($attr)->text($text));
             }
 
             /**
@@ -564,7 +569,7 @@ use volux\Dom;
                 if (empty($name)) {
                     return $this;
                 }
-                return $this->insertBefore($this->owner()->createElement($name)->attr($attr)->add($text), $this->firstChild);
+                return $this->insertBefore($this->owner()->createElement($name)->attr($attr)->text($text), $this->firstChild);
             }
 
             /**
