@@ -24,7 +24,7 @@
     },
     "autoload": {
         "psr-0": {
-            "volux\\": "lib/"
+            "volux\\": "src/"
         }
     }
 }
