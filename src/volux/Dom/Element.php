@@ -77,7 +77,7 @@ use volux\Dom;
             }
 
             /**
-             * @param $target
+             * @param string|Element|Tag|\DOMNode $target css selector or Element
              *
              * @return Element|Tag
              */
@@ -206,7 +206,7 @@ use volux\Dom;
             }
 
             /**
-             * @param string $xslFile
+             * @param string|callable $xslFile absolute o relative path to XSL file used include path
              * @param array $xsltParameters
              *
              * @return $this|Element|Tag
@@ -523,7 +523,7 @@ use volux\Dom;
             }
 
             /**
-             * @param      $source
+             * @param string $source filename or uri
              * @param callable|null $callback
              *
              * @return $this
