@@ -262,7 +262,7 @@ namespace volux;
         {
             if (empty($node)) {
                 $contextPath = $this->context()->getNodePath();
-                $this->contextElement->prepend($this->createComment(self::NAME_NOT_MATCHED . ' by "' . $contextPath . SL. $expr . '"'));
+                $this->contextElement->prepend($this->createComment(self::NAME_NOT_MATCHED . ' by "' . $contextPath . '/'. $expr . '"'));
                 $node = $this->createElement(self::NAME_NOT_MATCHED, $contextPath . $expr);
             }
             return $node;
@@ -304,7 +304,7 @@ namespace volux;
         }
 
         /**
-         * @param       $xslFile
+         * @param string|callable $xslFile absolute o relative path to XSL file used include path
          * @param array $xsltParameters
          * @param null  $element
          *
