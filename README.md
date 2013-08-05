@@ -38,7 +38,8 @@ $navBarInner = $html->body()
 				'class' => 'brand image',
 				'href' => '/',
 				'title' => 'Test')
-			)->add('<strong>Test</strong> app')
+			)->append('<strong>Test</strong> app')
+			->parent()
 		->parent()
 		->a('ul', array('class'=>'nav'))
 			->a('li', array('class'=>'divider-vertical'), false)
@@ -52,10 +53,11 @@ $html->body()
 	->append('p')
 		->attr('class', '3')
 		->text('1. Text with <em>entity</em><br>and ')
-		->add('<a href="#"><i class="icon-2"> </i>valid xml	1</a>.')
+		->append('<a href="#"><i class="icon-2"> </i>valid xml	1</a>.')
+		    ->parent()
 		->text(' And<br>any more text 1.') /* text is added by default */
 		->before('h1')
-			->add('Value with<br><span class=test>not valid xml</span>');
+			->append('Value with<br><span class=test>not valid xml</span>');
 
 echo $html;
 /**
