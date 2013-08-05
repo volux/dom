@@ -4,7 +4,7 @@ PHP version >= 5.3.6 extended DOM Objects via \DOMDocument::registerNodeClass wi
  + volux\Dom > \DOMDocument, volux\Attr > \DOMAttr, volux\Tag > volux\Element > \DOMElement, volux\Text > \DOMText, volux\Comment > \DOMComment, volux\Cdata > \DOMCdataSection;
  + extended \DOMXPath via volux\XPath with converting CSS selectors to XPath expression;
  + volux\Xslt class implement shadow load XSLT file or XSLT string (including from lambda function) and transformation with replacing target element;
- + wrapped DOMNodelist and DOMNamedNodeMap with volux\Set who inplement \ArrayIterator and \RecursiveIterator interfaces.
+ + wrapped DOMNodelist and DOMNamedNodeMap with volux\Set who implement \ArrayIterator and \RecursiveIterator interfaces.
 
 ### Build html example
 
@@ -132,7 +132,7 @@ if ($request) {
 echo $htmlResult;
 ```
 
-### XSLT transform example
+### XSL transform example
 
 ```php
 <?php
@@ -142,7 +142,30 @@ use volux\Dom;
 $html = new Dom\Html();
 
 $html->load('example.html');
-$html->find('.content')->transform('xslt/content.xsl'); /* each tags with class="content" will be transformed and replaced */
+$html->find('.content')->transform('xslt/content.xsl');
+/* each tags with class="content" will be transformed and replaced */
 
 $html->saveHTMLfile('transformed.html');
 ```
+
+### TODO
+
+Implement most important & relevant functional in jQuery API Manipulation & Traversing sections:
+ + .children()
+ + .contents()
+ + .css()
+ + .detach()
+ + .has()
+ + .index()
+ + .map()
+ + .nextAll()
+ + .nextUntil()
+ + .not()
+ + .slice()
+ + .toggleClass()
+ + .val()
+ + .wrapAll()
+ + .wrapInner()
+ + e.t.c.
+
+Create class volux\Form for easy build HTML Forms
