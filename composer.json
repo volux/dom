@@ -1,5 +1,5 @@
 {
-    "name": "volux/Dom",
+    "name": "volux/dom",
     "type": "library",
     "description": "Extended DOM objects with jQuery-like functionality.",
     "keywords": ["dom", "xml", "xpath", "xslt", "php", "jquery"],
