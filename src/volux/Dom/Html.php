@@ -206,13 +206,18 @@ use volux\Dom;
             }
 
             /**
-             * @param $title
+             * @param string $titleText
              *
              * @return $this|Html
              */
-            public function title($title)
+            public function title($titleText)
             {
-                $this->head->append('title')->text($title);
+                $title = $this->findByTag('title');
+                if ($title->isEmpty()) {
+                    $this->head->append('title')->text($titleText);
+                } else {
+                    $title->first()->text($titleText);
+                }
                 return $this;
             }
 

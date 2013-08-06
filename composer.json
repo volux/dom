@@ -1,7 +1,7 @@
 {
     "name": "volux/dom",
     "type": "library",
-    "description": "Extended DOM objects with jQuery-like functionality.",
+    "description": "Extended DOM objects with jQuery-like functionality. Create and transform, traversal and manipulation well-formed XML and HTML.",
     "keywords": ["dom", "xml", "xpath", "xslt", "php", "jquery"],
     "homepage": "https://github.com/volux/dom",
     "license": "MIT",
