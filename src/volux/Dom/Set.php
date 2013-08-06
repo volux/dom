@@ -255,8 +255,7 @@ use volux\Dom;
             }
 
             /**
-             * Invoke $method for each node in Set
-             * @todo test it
+             * Invoke $method for each node in Set if it present
              *
              * @param $method
              * @param array $args
@@ -266,15 +265,16 @@ use volux\Dom;
             public function __call($method, array $args)
             {
                 $newSet = array();
-                foreach ($this as $node) {
-                    /** @var $node Element|Tag|Attr|Text|Cdata */
-                    $result = call_user_func_array(array($node, $method), $args);
-                    if ($result instanceof \DOMNode) {
-                        $newSet[] = $result;
-                    }
-                    if ($result instanceof Set) {
-                        foreach ($result as $item) {
-                            $newSet[] = $item;
+                foreach ($this as $element) {
+                    if (method_exists($element, $method)) {
+                        /** @var $element Element|Tag|Attr|Text|Cdata */
+                        $result = call_user_func_array(array($element, $method), $args);
+                        if ($result instanceof Set) {
+                            foreach ($result as $item) {
+                                $newSet[] = $item;
+                            }
+                        } else {
+                            $newSet[] = $result;
                         }
                     }
                 }

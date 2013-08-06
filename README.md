@@ -150,8 +150,7 @@ $html->saveHTMLfile('transformed.html');
 
 ### TODO
 
-Implement most important & relevant functional in jQuery API Manipulation & Traversing sections:
- + .children()
+1. Implement most important & relevant functional in jQuery API Manipulation & Traversing sections:
  + .contents()
  + .css()
  + .detach()
@@ -168,4 +167,4 @@ Implement most important & relevant functional in jQuery API Manipulation & Trav
  + .wrapInner()
  + e.t.c.
 
-Create class volux\Form for easy build HTML Forms
+2. Create class volux\Form for easy build HTML Forms
