@@ -8,7 +8,7 @@ PHP version >= 5.3.6 extended DOM Objects via \DOMDocument::registerNodeClass wi
 
 ### Links
 
-[/volux/dom/wiki](volux\dom wiki)
+[https://github.com/volux/dom/wiki](volux\dom Wiki)
 
 ### Install
 
