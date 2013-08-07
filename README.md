@@ -2,9 +2,24 @@
 
 PHP version >= 5.3.6 extended DOM Objects via \DOMDocument::registerNodeClass with jQuery-like functionality:
  + volux\Dom > \DOMDocument, volux\Attr > \DOMAttr, volux\Tag > volux\Element > \DOMElement, volux\Text > \DOMText, volux\Comment > \DOMComment, volux\Cdata > \DOMCdataSection;
- + extended \DOMXPath via volux\XPath with converting CSS selectors to XPath expression;
+ + extended \DOMXPath via volux\XPath with ***converting CSS selectors to XPath expression***;
  + volux\Xslt class implement shadow load XSLT file or XSLT string (including from lambda function) and transformation with replacing target element;
  + wrapped DOMNodelist and DOMNamedNodeMap with volux\Set who implement \ArrayIterator and \RecursiveIterator interfaces.
+
+### Links
+
+[/volux/dom/wiki](volux\dom wiki)
+
+### Install
+
+Composer: add to your composer.json
+```json
+{
+    "require": {
+        "volux/dom": "dev-master"
+    }
+}
+```
 
 ### Build html example
 
