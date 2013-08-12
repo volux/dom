@@ -21,6 +21,45 @@ Composer: add to your composer.json
 }
 ```
 
+### Parse external html example
+
+```php
+<?php
+use volux\Dom;
+
+$htmlResult = new Dom\Html();
+
+$htmlResult->title('Google News Test');
+
+Dom\Html::doc()->load('http://news.google.com/news')
+    ->find('.titletext')
+        ->each(function (Dom\Tag $node, $index) use ($htmlResult) {
+            /** @var $node Dom\Tag */
+            $htmlResult->body()
+                ->append('p')
+                    ->append('span')->text(($index + 1) . ': ')
+                ->parent()
+                    ->append('a')->attr('href', $node->parent()->attr('href'))->text($node->text());
+        });
+
+echo $htmlResult;
+```
+
+### XSL transform example
+
+```php
+<?php
+
+use volux\Dom;
+
+Dom\Html::doc()->load('example.html')
+    ->find('.content')->xslt('content.xsl')
+        ->end()
+    ->saveHTMLfile('transformed.html');
+
+/* each tags with class="content" will be transformed and replaced */
+```
+
 ### Build html example
 
 ```php
@@ -81,7 +120,7 @@ echo $html;
 /**
 * you can use $navBarInner for add some element later:
 *
-* for example $navBarInner->add(file_get_contents($templateDir.'menu.html'))
+* for example $navBarInner->load($templateDir.'menu.html')
 *
 * or $navBarInner->a('ul', array('class' => 'nav'))
 *     ->l('li', array(
@@ -116,58 +155,6 @@ Result:
         <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script><script src="/js/app.js"></script>
     </body>
 </html>
-```
-
-### Parse external html example
-
-```php
-<?php
-use volux\Dom;
-
-$htmlResult = new Dom\Html();
-
-$request = file_get_contents('http://news.google.com/news');
-/* You can use any transport for retrieve outer site content like curl */
-
-$htmlResult = new Dom\Html();
-$htmlResult->title('Google News Test');
-
-if ($request) {
-
-	$htmlRequest = new Dom\Html();
-	$htmlRequest->html($request)
-	    ->find('.titletext')
-	        ->each(function (Dom\Tag $node, $index) use ($htmlResult) {
-	            /** @var $node Dom\Tag */
-	            $htmlResult->body()
-	                ->append('p')
-	                    ->append('span')->text(($index + 1) . ': ')
-	                ->parent()
-	                    ->append('a')->attr('href', $node->parent()->attr('href'))->text($node->text());
-	        });
-
-} else {
-
-	$htmlResult->body()->append('div', array('class'=>'empty'), 'Request to Google is empty');
-}
-
-echo $htmlResult;
-```
-
-### XSL transform example
-
-```php
-<?php
-
-use volux\Dom;
-
-$html = new Dom\Html();
-
-$html->load('example.html');
-$html->find('.content')->xslt('content.xsl');
-/* each tags with class="content" will be transformed and replaced */
-
-$html->saveHTMLfile('transformed.html');
 ```
 
 ### TODO
