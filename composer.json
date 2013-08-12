@@ -20,7 +20,8 @@
     ],
     "require": {
         "php": ">=5.3.6",
-        "ext-xsl": "*"
+        "ext-xsl": "*",
+        "ext-mbstring": "*"
     },
     "autoload": {
         "psr-0": {

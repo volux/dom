@@ -1,4 +1,9 @@
 <?php
+/**
+ * volux\Dom
+ *
+ * @link http://github.com/volux/dom
+ */
 namespace volux\Dom;
 
 use volux\Dom;
@@ -14,18 +19,17 @@ use volux\Dom;
         {
             const
                 ELEMENT_CLASS = '\volux\Dom\Tag',
-                HEAD_HTML = '<!DOCTYPE html>'
+                HEAD_HTML = '<!DOCTYPE html>',
+                AJAX_ROOT = 'reply'
             ;
 
-            /** @var Dom\Tag */
+            /** @var Tag */
             protected $head;
-            /** @var Dom\Tag */
+            /** @var Tag */
             protected $body;
-            /** @var Dom\Tag */
+            /** @var Tag */
             protected $scripts;
-            /** @var Dom\Tag */
-            protected $trash;
-            /** @var Dom\Tag */
+            /** @var Tag */
             protected $ajax;
 
             /**
@@ -40,14 +44,14 @@ use volux\Dom;
                 $this->head = $this->root()->append('head')->text(false);
                 $this->body = $this->root()->append('body')->text(false);
                 $this->scripts = $this->createElement('scripts');
-                $this->trash = $this->createElement('trash');
-                $this->ajax = $this->createElement('reply');
+
+                $this->ajax = $this->createElement(self::AJAX_ROOT);
             }
 
             /**
-             * @param null   $ns
-             * @param string $qualifiedName
-             * @param string $docType
+             * @param null|string $ns
+             * @param string      $qualifiedName
+             * @param string      $docType
              *
              * @return \DOMDocument
              */
@@ -71,7 +75,7 @@ use volux\Dom;
             /**
              * @param array $array
              *
-             * @return Html|Dom\Tag
+             * @return Html|Tag|Field
              */
             public function createFromArray(array $array)
             {
@@ -123,7 +127,7 @@ use volux\Dom;
                     $doc = $this->implementation();
 
                     foreach ($this->documentElement->childNodes as $child) {
-                        /** @var $child Tag */
+                        /** @var $child Tag|Field */
                         $doc->documentElement->appendChild($doc->importNode($child, true));
                     }
                     foreach ($this->documentElement->attributes as $attr) {
@@ -144,30 +148,24 @@ use volux\Dom;
             }
 
             /**
-             * @param string|callable $source
+             * @param string $source
              * @param int|null $options
              *
-             * @return bool
+             * @return $this|Html
              */
             public function load($source, $options = LIBXML_NOCDATA)
             {
-                if (is_callable($source)) {
-                    /**
-                     * @todo point to precompile source
-                     */
-                    $source = $source();
-                } else
-                    if (is_file($source)) {
-                        $source = file_get_contents($source, FILE_USE_INCLUDE_PATH);
-                    }
-                if ($source) {
-                    return $this->loadHTML($source, $options);
+                if (is_file($source)) {
+                    $source = file_get_contents($source, FILE_USE_INCLUDE_PATH);
                 }
-                return false;
+                if ($source) {
+                    $this->html($source);
+                }
+                return $this;
             }
 
             /**
-             * @return Tag
+             * @return Tag|Field
              */
             public function head()
             {
@@ -175,7 +173,7 @@ use volux\Dom;
             }
 
             /**
-             * @return Tag
+             * @return Tag|Field
              */
             public function body()
             {
@@ -183,7 +181,7 @@ use volux\Dom;
             }
 
             /**
-             * @return Tag
+             * @return Tag|Field
              */
             public function ajax()
             {
@@ -222,7 +220,7 @@ use volux\Dom;
             }
 
             /**
-             * @param        $uri
+             * @param string $uri
              * @param string $type
              *
              * @return $this|Html
@@ -234,17 +232,19 @@ use volux\Dom;
             }
 
             /**
+             * @param string $uri
+             *
              * @return $this|Html
              */
-            public function favicon()
+            public function favicon($uri = '/favicon.ico')
             {
-                $this->head->append('link')->attr(array('href' => '/favicon.ico', 'rel' => 'shortcut icon', 'type' => 'image/x-icon'));
+                $this->head->append('link')->attr(array('href' => $uri, 'rel' => 'shortcut icon', 'type' => 'image/x-icon'));
                 return $this;
             }
 
             /**
-             * @param $uri
-             * @param null $code
+             * @param string $uri
+             * @param null|string $code
              * @param boolean $inHead
              *
              * @return $this|Html
@@ -269,7 +269,7 @@ use volux\Dom;
              */
             public function __toString()
             {
-                return $this->html(null, false, true);
+                return $this->html();
             }
         }
     }

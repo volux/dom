@@ -1,4 +1,9 @@
 <?php
+/**
+ * volux\Dom
+ *
+ * @link http://github.com/volux/dom
+ */
 namespace volux\Dom;
 
 use volux\Dom;
@@ -16,14 +21,24 @@ use volux\Dom;
                 HEAD_HTML = ''
             ;
 
+            /**
+             * @var Tag|Element
+             */
             protected $head;
+            /**
+             * @var Tag|Element
+             */
             protected $body;
 
             /**
-             * @var Dom\Tag
+             * @var Tag|Element
              */
             public $documentElement;
 
+            /**
+             * @param string $version
+             * @param string $encoding
+             */
             public function __construct($version = self::VERSION, $encoding = self::ENCODING)
             {
                 parent::__construct($version, $encoding);
@@ -34,7 +49,8 @@ use volux\Dom;
 
             /**
              * @param array $head
-             * @return $this
+             *
+             * @return $this|Table|Dom
              */
             public function head(array $head)
             {
@@ -47,7 +63,8 @@ use volux\Dom;
 
             /**
              * @param array $body
-             * @return $this
+             *
+             * @return $this|Table|Dom
              */
             public function body(array $body)
             {

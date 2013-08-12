@@ -1,4 +1,9 @@
 <?php
+/**
+ * volux\Dom
+ *
+ * @link http://github.com/volux/dom
+ */
 namespace volux\Dom;
 
 use volux\Dom;
@@ -13,12 +18,12 @@ use volux\Dom;
         class Set extends \ArrayIterator implements \RecursiveIterator
         {
             /**
-             * @var Dom|Html
+             * @var Dom|Html|Form
              */
             protected $ownerDocument;
             /**
              * @param \DOMNodelist|\DOMNamedNodeMap|Set|array $nodeList
-             * @param Dom $dom
+             * @param Dom|Html|Form $dom
              */
             public function __construct($nodeList, Dom &$dom)
             {
@@ -31,9 +36,9 @@ use volux\Dom;
             }
 
             /**
-             * @return Dom|Html
+             * @return Dom|Html|Form
              */
-            public function owner()
+            public function doc()
             {
                 return $this->ownerDocument;
             }
@@ -59,26 +64,34 @@ use volux\Dom;
              */
             public function getChildren()
             {
-                return new self($this->current()->childNodes, $this->owner());
+                return new self($this->current()->childNodes, $this->doc());
+            }
+
+            /**
+             * @return Attr|Element|Tag|Field|Text|Cdata|Comment
+             */
+            public function end()
+            {
+                return $this->doc()->context();
             }
 
             /**
              * @param $callable
              *
-             * @return Set
+             * @return $this|Set
              */
             public function each($callable)
             {
                 $index = 0;
                 foreach ($this as $node) {
-                    call_user_func($callable, $node, $index++);
+                    $callable($node, $index++);
                 }
                 return $this;
             }
 
             /**
              * <code> while ($node = $set->sequent()) { $node } </code>
-             * @return Element|Tag|Attr|Text|Cdata
+             * @return Attr|Element|Tag|Field|Text|Cdata|Comment
              */
             public function sequent()
             {
@@ -91,43 +104,43 @@ use volux\Dom;
             }
 
             /**
-             * @param $offset
+             * @param int $offset
              *
-             * @return Element|Tag|Attr|Text|Cdata
+             * @return Attr|Element|Tag|Field|Text|Cdata|Comment
              */
             public function eq($offset)
             {
                 if ($this->count() < $offset) {
-                    return $this->owner()->notEmpty(false, '=Set::eq()');
+                    return $this->doc()->notEmpty(false, '=Set::eq()');
                 }
                 return $this->offsetGet($offset);
             }
 
             /**
-             * @return Element|Tag|Attr|Text|Cdata
+             * @return Attr|Element|Tag|Field|Text|Cdata|Comment
              */
             public function first()
             {
                 if ($this->count() == 0) {
-                    return $this->owner()->notEmpty(false, '=Set::first()');
+                    return $this->doc()->notEmpty(false, '=Set::first()');
                 }
                 return $this->offsetGet(0);
             }
 
             /**
-             * @return Element|Tag|Attr
+             * @return Attr|Element|Tag|Field|Text|Cdata|Comment
              */
             public function last()
             {
                 if ($this->count() == 0) {
-                    return $this->owner()->notEmpty(false, '=Set::last()');
+                    return $this->doc()->notEmpty(false, '=Set::last()');
                 }
                 $offset = $this->count()-1;
                 return $this->offsetGet($offset);
             }
 
             /**
-             * @return Set
+             * @return $this|Set
              */
             protected function removeAll()
             {
@@ -138,9 +151,9 @@ use volux\Dom;
             }
 
             /**
-             * @param null $key
+             * @param int|null $key
              *
-             * @return Set
+             * @return $this|Set
              */
             public function remove($key = null)
             {
@@ -159,14 +172,14 @@ use volux\Dom;
             }
 
             /**
-             * @param string|Element|Tag $target
+             * @param string|Element|Tag|Field $target
              *
-             * @return $this
+             * @return $this|Set
              */
             public function appendTo(&$target)
             {
                 if (is_string($target)) {
-                    $target = $this->owner()->createElement($target);
+                    $target = $this->doc()->createElement($target);
                 }
                 foreach ($this as $node) {
                     $target->append($node);
@@ -185,7 +198,7 @@ use volux\Dom;
             /**
              * @param string $xPath to child nodes like "date" or "@date"
              *
-             * @return Set
+             * @return $this|Set
              */
             public function sortBy($xPath)
             {
@@ -205,24 +218,42 @@ use volux\Dom;
             }
 
             /**
-             * @param $selector
+             * @param string|callable $selector css selector or callable
              *
              * @return Set
              */
             public function filter($selector)
             {
                 $nodeset = array();
-                foreach ($this as $node) {
-                    /** @var $node Element|Tag|Attr|Text|Cdata */
-                    if ($node->is($selector)) {
-                        $nodeset[] = $node;
+                if (is_string($selector)) {
+                    foreach ($this as $node) {
+                        /** @var $node Attr|Element|Tag|Field|Text|Cdata|Comment */
+                        if ($node->is($selector)) {
+                            $nodeset[] = $node;
+                        }
                     }
-                }
-                return new self($nodeset, $this->owner());
+                } else
+                    if (is_callable($selector)) {
+                        foreach ($this as $index => $node) {
+                            /** @var $node Attr|Element|Tag|Field|Text|Cdata|Comment */
+                            if ($selector($node, $index)) {
+                                $nodeset[] = $node;
+                            }
+                        }
+                    } else
+                        if ($selector instanceof \DOMNode) {
+                            foreach ($this as $node) {
+                                /** @var $node Attr|Element|Tag|Field|Text|Cdata|Comment */
+                                if ($node->isSameNode($selector)) {
+                                    $nodeset[] = $node;
+                                }
+                            }
+                        }
+                return new self($nodeset, $this->doc());
             }
 
             /**
-             * also used like $this->names('attr', 'id')
+             * also used like $this->map('attr', 'id')
              *
              * @param string $method
              * @param string $key
@@ -234,7 +265,7 @@ use volux\Dom;
             {
                 $array = array();
                 foreach ($this as $node) {
-                    /** @var $node Element|Tag|Attr|Text|Cdata */
+                    /** @var $node Attr|Element|Tag|Field|Text|Cdata|Comment */
                     $array[$node->$key()] = $node->$method($arg);
                 }
                 return new \ArrayIterator($array);
@@ -244,12 +275,12 @@ use volux\Dom;
              * @param string $xslFile
              * @param array $xsltParameters
              *
-             * @return $this
+             * @return $this|Set
              */
-            public function transform($xslFile, $xsltParameters = array())
+            public function xslt($xslFile, $xsltParameters = array())
             {
                 foreach ($this as $node) {
-                    $this->owner()->transform($xslFile, $xsltParameters, $node);
+                    $this->doc()->xslt($xslFile, $xsltParameters, $node);
                 }
                 return $this;
             }
@@ -260,14 +291,14 @@ use volux\Dom;
              * @param $method
              * @param array $args
              *
-             * @return Set
+             * @return $this|Set
              */
             public function __call($method, array $args)
             {
                 $newSet = array();
                 foreach ($this as $element) {
                     if (method_exists($element, $method)) {
-                        /** @var $element Element|Tag|Attr|Text|Cdata */
+                        /** @var $element Attr|Element|Tag|Field|Text|Cdata|Comment */
                         $result = call_user_func_array(array($element, $method), $args);
                         if ($result instanceof Set) {
                             foreach ($result as $item) {
@@ -279,7 +310,7 @@ use volux\Dom;
                     }
                 }
                 if ($newSet) {
-                    return new self($newSet, $this->owner());
+                    return new self($newSet, $this->doc());
                 }
                 return $this;
             }
@@ -291,8 +322,8 @@ use volux\Dom;
             {
                 $string = '';
                 foreach ($this as $node) {
-                    /** @var $node Element|Tag|Attr|Text|Cdata */
-                    $string .= (string)$node. PHP_EOL . PHP_EOL;
+                    /** @var $node Attr|Element|Tag|Field|Text|Cdata|Comment */
+                    $string .= (string)$node;
                 }
                 return $string;
             }

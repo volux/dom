@@ -1,11 +1,16 @@
 <?php
+/**
+ * volux\Dom
+ *
+ * @link http://github.com/volux/dom
+ */
 namespace volux;
 
 {
 
     /**
      * Class Dom
-     * @package volux
+     * @package volux\Dom
      * @author  Andrey Skulov <andrey.skulov@gmail.com>
      */
     class Dom extends \DOMDocument
@@ -23,7 +28,7 @@ namespace volux;
         ;
 
         /**
-         * @var Dom\Element|Dom\Tag
+         * @var Dom\Element|Dom\Tag|Dom\Field
          */
         public $documentElement;
         /**
@@ -31,7 +36,7 @@ namespace volux;
          */
         public $xPath;
         /**
-         * @var Dom\Element|Dom\Tag
+         * @var Dom\Element|Dom\Tag|Dom\Field
          */
         protected $contextElement;
 
@@ -99,47 +104,42 @@ namespace volux;
         }
 
         /**
-         * @param string|callable $source
+         * @param string   $source
          * @param int|null $options
+         * @param bool     $result
          *
-         * @return bool
+         * @return $this|Dom
          */
-        public function load($source, $options = LIBXML_NOCDATA)
+        public function load($source, $options = LIBXML_NOCDATA, &$result = false)
         {
-            if (is_callable($source)) {
-                /**
-                 * @todo point to precompile source
-                 */
-                $source = $source();
-            } else
-                if (is_file($source)) {
-                    $source = file_get_contents($source, FILE_USE_INCLUDE_PATH);
-                }
-            if ($source) {
-                return $this->loadXML($source, $options);
+            if (is_file($source)) {
+                $source = file_get_contents($source, FILE_USE_INCLUDE_PATH);
             }
-            return false;
+            if ($source) {
+                return $this->loadXML($source, $options, $result);
+            }
+            return $this;
         }
 
         /**
          * @param string   $source
          * @param int|null $options
+         * @param bool     $result
          *
-         * @return mixed
+         * @return $this|Dom
          */
-        public function loadXML($source, $options = LIBXML_NOCDATA)
+        public function loadXML($source, $options = LIBXML_NOCDATA, &$result = false)
         {
             $this->preserveWhiteSpace = false;
             $this->recover = true;
-            $result = parent::loadXML(html_entity_decode($source, ENT_NOQUOTES, $this->xmlEncoding), $options);
-            $this->setXPath($this);
-            return $result;
+            $result = parent::loadXML(mb_convert_encoding((string)$source, 'HTML-ENTITIES', $this->xmlEncoding), $options);
+            return $this->setXPath($this);
         }
 
         /**
          * @param string $source
          *
-         * @return bool
+         * @return $this|Dom
          */
         public function loadNsXML($source)
         {
@@ -155,31 +155,34 @@ namespace volux;
 
         /**
          * @param string $source or to string convertible
+         * @param bool   $result
          *
-         * @return bool
+         * @return $this|Dom
          */
-        public function loadHTML($source)
+        public function loadHTML($source, &$result = false)
         {
-            libxml_use_internal_errors(true); # ???
+            libxml_use_internal_errors(true); /* ??? */
             $this->preserveWhiteSpace = false;
             $this->recover = true;
             $result = parent::loadHTML(mb_convert_encoding((string)$source, 'HTML-ENTITIES', $this->xmlEncoding));
-            $this->setXPath($this);
-            return $result;
+            return $this->setXPath($this);
         }
 
         /**
          * @param string $filename
+         * @param bool   $result
          *
-         * @return bool
+         * @return $this|Dom
          */
-        public function loadHTMLFile($filename)
+        public function loadHTMLFile($filename, &$result = false)
         {
-            $this->preserveWhiteSpace = false;
-            $this->recover = true;
-            $result = parent::loadHTMLFile($filename);
-            $this->setXPath($this);
-            return $result;
+            if (is_file($filename)) {
+                $source = file_get_contents($filename, FILE_USE_INCLUDE_PATH);
+                if ($source) {
+                    return $this->loadHTML($source, $options);
+                }
+            }
+            return $this;
         }
 
         /**
@@ -197,7 +200,7 @@ namespace volux;
         /**
          * @param $name
          *
-         * @return Dom\Element|Dom\Tag
+         * @return Dom\Element|Dom\Tag|Dom\Field
          */
         public function root($name = null)
         {
@@ -214,7 +217,7 @@ namespace volux;
         /**
          * @param $child
          *
-         * @return Dom\Element|Dom\Tag
+         * @return Dom\Element|Dom\Tag|Dom\Field
          */
         public function append($child)
         {
@@ -226,7 +229,7 @@ namespace volux;
 
         /**
          * @param $node Dom\Element
-         * @return Dom\Element|Dom\Tag
+         * @return Dom\Element|Dom\Tag|Dom\Field
          */
         public function appendTo(Dom\Element $node)
         {
@@ -238,7 +241,7 @@ namespace volux;
          * @param null $index
          * @param null $context
          *
-         * @return Dom\Element|Dom\Tag|Dom\Set
+         * @return Dom\Element|Dom\Tag|Dom\Field|Dom\Set
          */
         public function find($expr, $index = null, $context = null)
         {
@@ -253,10 +256,10 @@ namespace volux;
         }
 
         /**
-         * @param $node
-         * @param $expr
+         * @param \DOMNode|bool $node
+         * @param null|string $expr
          *
-         * @return Dom\Element|Dom\Tag
+         * @return Dom\Element|Dom\Tag|Dom\Field
          */
         public function notEmpty($node, $expr = null)
         {
@@ -269,7 +272,7 @@ namespace volux;
         }
 
         /**
-         * @param $name
+         * @param string $name
          *
          * @return Dom\Set
          */
@@ -279,10 +282,10 @@ namespace volux;
         }
 
         /**
-         * @param $id
+         * @param string $id
          * @param bool $internal
          *
-         * @return Dom\Element|Dom\Tag
+         * @return Dom\Element|Dom\Tag|Dom\Field
          */
         public function findById($id, $internal = true)
         {
@@ -293,7 +296,7 @@ namespace volux;
         }
 
         /**
-         * @return Dom\Element|Dom\Tag|$this|Dom
+         * @return Dom\Element|Dom\Tag|Dom\Field|$this|Dom
          */
         public function context()
         {
@@ -306,11 +309,11 @@ namespace volux;
         /**
          * @param string|callable $xslFile absolute o relative path to XSL file used include path
          * @param array $xsltParameters
-         * @param null  $element
+         * @param null|\DOMNode  $element
          *
-         * @return Dom\Element|Dom\Tag
+         * @return Dom\Element|Dom\Tag|Dom\Field
          */
-        public function transform($xslFile, $xsltParameters = array(), $element = null)
+        public function xslt($xslFile, $xsltParameters = array(), $element = null)
         {
             if (is_null($element)) {
                 $element = $this->documentElement;
@@ -324,7 +327,7 @@ namespace volux;
         }
 
         /**
-         * @param $list
+         * @param array|\DOMNamedNodeMap|\DOMNodeList $list
          *
          * @return Dom\Set
          */
@@ -334,14 +337,14 @@ namespace volux;
         }
 
         /**
-         * @param $name
-         * @param null $value
+         * @param string $name node name or well formed xml fragment or text
+         * @param null|string $value
          *
-         * @return Dom\Element|Dom\Tag
+         * @return Dom\Element|Dom\Tag|Dom\Field
          */
         public function createElement($name, $value = null)
         {
-            if (!is_bool(strpos($name, '<'))) {
+            if (preg_match('/<.*?>/im', $name) or preg_match('/&.*?;/im', $name)) {
                 if (!$this->createFragment($name, $node)) {
                     $node = $this->createText($name);
                 }
@@ -355,20 +358,31 @@ namespace volux;
         }
 
         /**
-         * @param $xml
+         * @param string $xml possible well formed xml
          * @param $fragment
          *
          * @return bool
          */
         public function createFragment($xml, &$fragment)
         {
+            $fix = self::doc()->loadHTML($xml)->find('body', 0);
+
+            if ($xml{0} !== '<') {
+                $xml = (string)$this->set($fix->childNodes)->getChildren();
+            } else
+                if ($fix->childNodes->length) {
+                    $xml = (string)$this->set($fix->childNodes);
+                } else {
+                    $xml = (string)$fix;
+                }
+
             $fragment = $this->createDocumentFragment();
-            $result = @$fragment->appendXML(html_entity_decode($xml, ENT_NOQUOTES, $this->xmlEncoding));
-            return $result;
+
+            return @$fragment->appendXML($xml);
         }
 
         /**
-         * @param $name
+         * @param string $name attribute name
          * @param string $value
          *
          * @return Dom\Attr
@@ -381,7 +395,7 @@ namespace volux;
         }
 
         /**
-         * @param $string
+         * @param string $string or convertible to string
          *
          * @return Dom\Text
          */
@@ -391,7 +405,7 @@ namespace volux;
         }
 
         /**
-         * @param $string
+         * @param string $string or convertible to string
          *
          * @return Dom\Cdata
          */
@@ -401,7 +415,7 @@ namespace volux;
         }
 
         /**
-         * @param $string
+         * @param string $string or convertible to string
          *
          * @return Dom\Comment
          */
@@ -411,7 +425,7 @@ namespace volux;
         }
 
         /**
-         * @param $uri
+         * @param string $uri
          * @param string $type
          *
          * @return $this|Dom
@@ -426,7 +440,7 @@ namespace volux;
          * @param \DOMNode $importedNode
          * @param bool $deep
          *
-         * @return Dom\Element|Dom\Tag
+         * @return Dom\Element|Dom\Tag|Dom\Field
          */
         public function importNode(\DOMNode $importedNode, $deep = true)
         {
@@ -470,7 +484,7 @@ namespace volux;
         /**
          * @param array $array
          *
-         * @return Dom|Dom\Element
+         * @return Dom|Dom\Element|Dom\Tag|Dom\Field
          */
         public function createFromArray(array $array)
         {
@@ -481,7 +495,7 @@ namespace volux;
          * @param array $array
          * @param       $node
          *
-         * @return Dom|Dom\Element|Dom\Tag
+         * @return Dom|Dom\Element|Dom\Tag|Dom\Field
          */
         protected function createDomFromArray(array $array, $node)
         {

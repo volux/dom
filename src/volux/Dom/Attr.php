@@ -1,4 +1,9 @@
 <?php
+/**
+ * volux\Dom
+ *
+ * @link http://github.com/volux/dom
+ */
 namespace volux\Dom;
 
 use volux\Dom;
@@ -14,7 +19,7 @@ use volux\Dom;
         {
 
             /**
-             * @param $expr
+             * @param string $expr attr name or 'value' or part of value '~[ ]part'
              *
              * @return bool
              */
@@ -22,6 +27,9 @@ use volux\Dom;
             {
                 if ($expr{0} == '@') {
                     return ($expr === '@'.$this->nodeName);
+                }
+                if ($expr{0} == '~') {
+                    return !is_bool(strpos($this->nodeName, trim(substr($expr, 1))));
                 }
                 return ($expr === $this->nodeValue);
             }
@@ -35,15 +43,15 @@ use volux\Dom;
             }
 
             /**
-             * @return Dom
+             * @return Dom|Html|Table|Form
              */
-            protected function owner()
+            protected function doc()
             {
                 return $this->ownerElement->ownerDocument;
             }
 
             /**
-             * @return Element|Tag
+             * @return Element|Tag|Field
              */
             protected function parent()
             {
@@ -61,7 +69,7 @@ use volux\Dom;
             }
 
             /**
-             * @return Element|Tag
+             * @return Element|Tag|Field
              */
             public function remove()
             {
@@ -71,20 +79,18 @@ use volux\Dom;
             }
 
             /**
-             * @param null $newText
-             * @param bool $add
+             * @param null|string $newText
+             * @param bool $replace
              *
              * @return Attr|string
              */
-            public function text($newText = null, $add = false)
+            public function text($newText = null, $replace = false)
             {
                 if (!is_null($newText)) {
-                    $exitsText = $this->nodeValue;
-                    if ($exitsText && $add) {
-                        $this->nodeValue = $exitsText.$newText;
-                        return $this;
+                    if ($replace) {
+                        $this->nodeValue = '';
                     }
-                    $this->nodeValue = $newText;
+                    $this->nodeValue = $this->nodeValue.$newText;
                     return $this;
                 }
                 return $this->nodeValue;

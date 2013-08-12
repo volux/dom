@@ -1,4 +1,9 @@
 <?php
+/**
+ * volux\Dom
+ *
+ * @link http://github.com/volux/dom
+ */
 namespace volux\Dom;
 
 use volux\Dom;
@@ -15,10 +20,10 @@ use volux\Dom;
             const CLASS_ATTR = 'class';
 
             /**
-             * @param $name
-             * @param null $value
+             * @param string $name data key
+             * @param null|string|array|object $value
              *
-             * @return mixed|string|Tag
+             * @return mixed|Element|Tag|Field
              */
             public function data($name, $value = null)
             {
@@ -34,7 +39,7 @@ use volux\Dom;
              * @param $name
              * @param null $value
              *
-             * @return mixed|string|Tag
+             * @return string|Element|Tag|Field
              */
             public function ng($name, $value = null)
             {
@@ -46,9 +51,22 @@ use volux\Dom;
             }
 
             /**
-             * @param $classes
+             * @param string|null $id
              *
-             * @return Tag
+             * @return string|Element|Tag|Field
+             */
+            public function id($id = null)
+            {
+                if (is_null($id)) {
+                    return $this->attr('id')->text();
+                }
+                return $this->attr('id', $id);
+            }
+
+            /**
+             * @param string $classes separated with space
+             *
+             * @return Element|Tag|Field
              */
             public function addClass($classes)
             {
@@ -56,9 +74,9 @@ use volux\Dom;
             }
 
             /**
-             * @param bool $classes
+             * @param bool|string $classes separated with space
              *
-             * @return Tag
+             * @return Element|Tag|Field
              */
             public function removeClass($classes = false)
             {
@@ -66,9 +84,9 @@ use volux\Dom;
             }
 
             /**
-             * @param null $html
+             * @param null|string $html well formed fragment
              *
-             * @return string|Tag
+             * @return string|Element|Tag|Field
              */
             public function html($html = null)
             {
@@ -80,24 +98,16 @@ use volux\Dom;
             }
 
             /**
-             * @param string $xml
+             * @param string $html well formed html
              *
-             * @return $this|Tag
+             * @return $this|Element|Tag|Field
              */
-            public function replaceWith($xml)
+            public function replaceWith($html)
             {
-                if ($this->owner()->createFragment($xml, $fragment)) {
+                if ($this->doc()->createFragment($html, $fragment)) {
                     return $this->replace($fragment);
                 }
                 return $this;
-            }
-
-            /**
-             * @return Html
-             */
-            public function owner()
-            {
-                return $this->ownerDocument;
             }
 
             /**

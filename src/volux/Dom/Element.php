@@ -1,4 +1,9 @@
 <?php
+/**
+ * volux\Dom
+ *
+ * @link http://github.com/volux/dom
+ */
 namespace volux\Dom;
 
 use volux\Dom;
@@ -13,9 +18,9 @@ use volux\Dom;
         class Element extends \DOMElement
         {
             /**
-             * @param null $xml
+             * @param null|string $xml
              *
-             * @return string|Element
+             * @return string|Element|Tag|Field
              */
             public function xml($xml = null)
             {
@@ -27,26 +32,25 @@ use volux\Dom;
             }
 
             /**
-             * @return Dom
+             * @return Dom|Html|Table|Form
              */
-            public function owner()
+            public function doc()
             {
                 return $this->ownerDocument;
             }
 
             /**
-             * @param $expr
+             * @param string $expr
              *
              * @return bool
              */
             public function is($expr)
             {
-                return !$this->owner()->find(array($expr, $this->getNodePath()))->isEmpty();
+                return !$this->doc()->find(array($expr, $this->getNodePath()))->isEmpty();
             }
 
             /**
-             * name of child node or attribute
-             * @param $expr
+             * @param string|array $expr name of child node or attribute
              *
              * @return bool
              */
@@ -64,71 +68,74 @@ use volux\Dom;
             }
 
             /**
-             * @param $child
+             * @param string|Element|Tag|Field $child
              *
-             * @return Element|Tag
+             * @return Element|Tag|Field
              */
             public function append($child)
             {
                 if (is_string($child)) {
-                    $child = $this->owner()->createElement($child);
+                    $child = $this->doc()->createElement($child);
+                }
+                if ($child instanceof Dom) {
+                    $child = $child->documentElement;
                 }
                 return $this->appendChild($this->importNode($child));
             }
 
             /**
-             * @param string|Element|Tag|\DOMNode $target css selector or Element
+             * @param string|Element|Tag|Field|\DOMNode $target css selector or Element
              *
-             * @return Element|Tag
+             * @return Element|Tag|Field
              */
             public function appendTo($target)
             {
                 static $find = array();
                 if (is_string($target)) {
                     if (!isset($find[$target])) {
-                        $find[$target] = $this->owner()->find($target, 0);
+                        $find[$target] = $this->doc()->find($target, 0);
                     }
                     $target = $find[$target];
                 }
-                /** @var $target Element */
+                /** @var $target Element|Tag|Field */
                 return $target->appendChild($target->ownerDocument->importNode($this, true));
             }
 
             /**
-             * @param $child
+             * @param string|Element|Tag|Field $child
              *
-             * @return Element|Tag
+             * @return Element|Tag|Field
              */
             public function prepend($child)
             {
                 if (is_string($child)) {
-                    $child = $this->owner()->createElement($child);
+                    $child = $this->doc()->createElement($child);
                 }
                 return $this->insertBefore($this->importNode($child), $this->firstChild);
             }
 
             /**
-             * @param $target
+             * @param string|Element|Tag|Field|\DOMNode $target css selector or Element
              *
-             * @return Element|Tag
+             * @return Element|Tag|Field
              */
             public function prependTo($target)
             {
                 static $find = array();
                 if (is_string($target)) {
                     if (!isset($find[$target])) {
-                        $find[$target] = $this->owner()->find($target, 0);
+                        $find[$target] = $this->doc()->find($target, 0);
                     }
                     $target = $find[$target];
                 }
-                /** @var $target Element */
-                return $target->prepend($this);
+                /** @var $target Element|Tag|Field */
+                return $target->insertBefore($target->ownerDocument->importNode($this, true), $target->firstChild);
             }
 
             /**
-             * @param null $selector
+             * @param null|string $selector
              *
-             * @return Element|Text|Tag|Set
+             * @return Element|Text|Tag|Field|Set
              */
             public function next($selector = null)
             {
@@ -139,9 +146,9 @@ use volux\Dom;
             }
 
             /**
-             * @param null $selector
+             * @param null|string $selector
              *
-             * @return Element|Text|Tag|Set
+             * @return Element|Text|Tag|Field|Set
              */
             public function prev($selector = null)
             {
@@ -152,9 +159,9 @@ use volux\Dom;
             }
 
             /**
-             * @param $sibling
+             * @param null|string $sibling
              *
-             * @return Element|Tag
+             * @return Element|Tag|Field
              */
             public function after($sibling = null)
             {
@@ -166,7 +173,7 @@ use volux\Dom;
                     return $this;
                 }
                 if (is_string($sibling)) {
-                    $sibling = $this->owner()->createElement($sibling);
+                    $sibling = $this->doc()->createElement($sibling);
                 }
                 if (!$next) {
                     return $this->parentNode->appendChild($this->importNode($sibling));
@@ -175,9 +182,9 @@ use volux\Dom;
             }
 
             /**
-             * @param $sibling
+             * @param null|string $sibling
              *
-             * @return Element|Tag
+             * @return Element|Tag|Field
              */
             public function before($sibling = null)
             {
@@ -189,15 +196,15 @@ use volux\Dom;
                     return $this;
                 }
                 if (is_string($sibling)) {
-                    $sibling = $this->owner()->createElement($sibling);
+                    $sibling = $this->doc()->createElement($sibling);
                 }
                 return $this->parentNode->insertBefore($this->importNode($sibling), $this);
             }
 
             /**
-             * @param \DOMNode $newNode
+             * @param \DOMNode|Element|Tag $newNode
              *
-             * @return Element|Tag
+             * @return Element|Tag|Field
              */
             public function replace(\DOMNode $newNode)
             {
@@ -206,25 +213,25 @@ use volux\Dom;
             }
 
             /**
-             * @param string|callable $xslFile absolute o relative path to XSL file used include path
+             * @param string $xslFile absolute o relative path to XSL file used include path
              * @param array $xsltParameters
              *
-             * @return $this|Element|Tag
+             * @return $this|Element|Tag|Field
              */
-            public function transform($xslFile, $xsltParameters = array())
+            public function xslt($xslFile, $xsltParameters = array())
             {
-                return $this->owner()->transform($xslFile, $xsltParameters, $this);
+                return $this->doc()->xslt($xslFile, $xsltParameters, $this);
             }
 
             /**
-             * @param $wrapper
+             * @param string|Element|Tag $wrapper
              *
-             * @return Element|Tag
+             * @return Element|Tag|Field
              */
             public function wrap($wrapper)
             {
                 if (is_string($wrapper)) {
-                    $wrapper = $this->owner()->createElement($wrapper);
+                    $wrapper = $this->doc()->createElement($wrapper);
                 }
                 $parent = $this->parentNode;
                 $wrapper = $parent->appendChild($wrapper);
@@ -234,9 +241,9 @@ use volux\Dom;
             }
 
             /**
-             * @param int $to
+             * @param int|null $to
              *
-             * @return Element|Tag
+             * @return Element|Tag|Field
              */
             public function position($to = null)
             {
@@ -253,7 +260,7 @@ use volux\Dom;
             /**
              * @param bool $returnSwap
              *
-             * @return Element|Tag
+             * @return Element|Tag|Field
              */
             public function up($returnSwap = false)
             {
@@ -268,7 +275,7 @@ use volux\Dom;
             /**
              * @param bool $returnSwap
              *
-             * @return Element|Tag
+             * @return Element|Tag|Field
              */
             public function down($returnSwap = false)
             {
@@ -281,7 +288,7 @@ use volux\Dom;
             }
 
             /**
-             * @return Element|Tag|Dom
+             * @return Element|Tag|Field|Dom
              */
             public function parent()
             {
@@ -297,9 +304,9 @@ use volux\Dom;
             }
 
             /**
-             * @param $expr
+             * @param string $expr css selector
              *
-             * @return Element|Tag
+             * @return Element|Tag|Field
              */
             public function closest($expr)
             {
@@ -309,7 +316,7 @@ use volux\Dom;
             /**
              * @param bool $asXPath
              *
-             * @return string|Element|Tag
+             * @return string|Element|Tag|Field
              */
             public function path($asXPath = false)
             {
@@ -319,7 +326,7 @@ use volux\Dom;
                 if ($this->isEmpty()) {
                     return $this;
                 }
-                $path = $this->owner()->createElement('path');
+                $path = $this->doc()->createElement('path');
                 $parents = $this->parents();
                 while ($parent = $parents->sequent()) {
                     $path->append($parent->copy(false));
@@ -329,15 +336,15 @@ use volux\Dom;
             }
 
             /**
-             * @return Element|Tag|Text|Cdata|Comment
+             * @return Element|Tag|Text|Cdata|Comment|Field
              */
             public function end()
             {
-                return $this->owner()->context();
+                return $this->doc()->context();
             }
 
             /**
-             * @return Element|Tag
+             * @return Element|Tag|Field
              */
             public function remove()
             {
@@ -345,14 +352,14 @@ use volux\Dom;
             }
 
             /**
-             * @param $selector
+             * @param string|null $selector css selector or n or "[n]"
              *
-             * @return Set|Element|Tag|Text|Cdata|Comment
+             * @return Set|Element|Tag|Text|Cdata|Comment|Field
              */
             public function children($selector = null)
             {
                 if (is_null($selector)) {
-                    return $this->owner()->set($this->childNodes);
+                    return $this->doc()->set($this->childNodes);
                 }
                 if (is_numeric($selector)) {
                     return $this->childNodes->item((int)$selector);
@@ -361,9 +368,9 @@ use volux\Dom;
             }
 
             /**
-             * @param null $selector
+             * @param null|string $selector css selector
              *
-             * @return Set|Element|Tag|Text|Cdata|Comment
+             * @return Set|Element|Tag|Text|Cdata|Comment|Field
              */
             public function siblings($selector = null)
             {
@@ -375,12 +382,12 @@ use volux\Dom;
              */
             public function attributes()
             {
-                return $this->owner()->set($this->attributes);
+                return $this->doc()->set($this->attributes);
             }
 
             /**
              * empty - reserved word
-             * @return Element|Tag
+             * @return Element|Tag|Field
              */
             public function clear()
             {
@@ -389,10 +396,10 @@ use volux\Dom;
             }
 
             /**
-             * @param $name
-             * @param null $value
+             * @param string|array|Set $name
+             * @param null|string|bool $value
              *
-             * @return $this|Element|Tag|Attr
+             * @return $this|Element|Tag|Field|Attr
              */
             public function attr($name, $value = null)
             {
@@ -428,7 +435,7 @@ use volux\Dom;
                 }
                 $attr = $this->getAttributeNode($name);
                 if (!$attr) {
-                    $attr = $this->owner()->createAttr($name, null);
+                    $attr = $this->doc()->createAttr($name, null);
                 }
                 return $attr;
             }
@@ -438,7 +445,7 @@ use volux\Dom;
              * @param string $items space separated
              * @param bool $add if true, false - remove
              *
-             * @return $this|Element|Tag
+             * @return $this|Element|Tag|Field
              */
             protected function attrItems($attr, $items, $add)
             {
@@ -457,16 +464,35 @@ use volux\Dom;
             }
 
             /**
-             * @param null $name
+             * @param null|string $name
              *
-             * @return string|Element|Tag
+             * @return string|Element|Tag|Field
              */
             public function name($name = null)
             {
                 if (!empty($name)) {
+                    return $this->rename($name);
+                }
+                return $this->nodeName;
+            }
+
+            /**
+             * @param string $name
+             * @param bool   $native
+             * @param string $ns
+             *
+             * @return $this|Element|Tag|Field
+             */
+            public function rename($name, $native = true, $ns = '')
+            {
+                if (!empty($name)) {
+                    if ($native) {
+                        $this->doc()->renameNode($this, $ns, $name);
+                        return $this;
+                    }
                     $name = (string)$name;
                     $old = $this->copy();
-                    $new = $this->owner()->createElement($name);
+                    $new = $this->doc()->createElement($name);
                     $new->attr($old->attributes());
                     $children = $old->children();
                     foreach ($children as $child) {
@@ -475,13 +501,13 @@ use volux\Dom;
                     $this->parentNode->replaceChild($new, $this);
                     return $new;
                 }
-                return $this->nodeName;
+                return $this;
             }
 
             /**
              * @param bool $deep
              *
-             * @return Element|Tag
+             * @return Element|Tag|Field
              */
             public function copy($deep = true)
             {
@@ -489,15 +515,15 @@ use volux\Dom;
             }
 
             /**
-             * @param null $newText
+             * @param null|string $newText
              * @param bool $replace
              *
-             * @return $this|Element|Tag|string
+             * @return $this|Element|Tag|Field|Set
              */
             public function text($newText = null, $replace = false)
             {
                 if (!is_null($newText)) {
-                    $newTextNode = $this->owner()->createText($newText);
+                    $newTextNode = $this->doc()->createText($newText);
                     if ($replace) {
                         $this->clear();
                     }
@@ -508,25 +534,25 @@ use volux\Dom;
             }
 
             /**
-             * @param $expr
-             * @param null $index
-             * @param null $context
+             * @param string|array $expr css selector or xPath
+             * @param null|int $index
+             * @param null|Element|Tag $context
              *
-             * @return Element|Tag|Attr|Text|Cdata|Comment|Set
+             * @return Element|Tag|Field|Attr|Text|Cdata|Comment|Set
              */
             public function find($expr, $index = null, $context = null)
             {
                 if (is_null($context)) {
                     $context = $this;
                 }
-                return $this->owner()->find($expr, $index, $context);
+                return $this->doc()->find($expr, $index, $context);
             }
 
             /**
              * @param string $source filename or uri
              * @param callable|null $callback
              *
-             * @return $this
+             * @return $this|Element|Tag|Field
              */
             public function load($source, $callback = null)
             {
@@ -543,46 +569,52 @@ use volux\Dom;
             }
 
             /**
-             * @param $name
+             * Shortcut to append and fill
+             *
+             * @param string $name node name
              * @param array $attr
              * @param string $text
              *
-             * @return $this|Element|Tag
+             * @return $this|Element|Tag|Field
              */
             public function a($name, array $attr = array(), $text = '')
             {
                 if (empty($name)) {
                     return $this;
                 }
-                return $this->appendChild($this->owner()->createElement($name)->attr($attr)->text($text));
+                return $this->appendChild($this->doc()->createElement($name)->attr($attr)->text($text));
             }
 
             /**
-             * @param $name
+             * Shortcut to prepend and fill
+             *
+             * @param string $name node name
              * @param array $attr
              * @param string $text
              *
-             * @return $this|Element|Tag
+             * @return $this|Element|Tag|Field
              */
             public function p($name, array $attr = array(), $text = '')
             {
                 if (empty($name)) {
                     return $this;
                 }
-                return $this->insertBefore($this->owner()->createElement($name)->attr($attr)->text($text), $this->firstChild);
+                return $this->insertBefore($this->doc()->createElement($name)->attr($attr)->text($text), $this->firstChild);
             }
 
             /**
+             * Helper for append list of nodes
+             *
              * @example for simple list (<li>, <ol> etc.): array('foo', 'bar', ...)
              * @example for <img>: array(array('src'=>'foo'), ...)
              * @example for <input>: array(array('value'=>'bar', 'type'=>'hidden'), ...)
              * @example for <a>: array(array('a-text' => array('href'=>'bar', 'class'=>'a-class')), ...)
-             * @example for <option>: , array(array('option-text' => array('value'=>'foo', 'selected'=>'selected')), ...)
+             * @example for <option>: array(array('option-text' => array('value'=>'foo', 'selected'=>'selected')), ...)
              *
-             * @param $name
+             * @param string $name
              * @param array $fill
              *
-             * @return $this|Element|Tag
+             * @return $this|Element|Tag|Field
              */
             public function l($name, array $fill)
             {
@@ -611,13 +643,13 @@ use volux\Dom;
             }
 
             /**
-             * @param $newNode
+             * @param \DOMNode $newNode
              *
-             * @return Element|Tag
+             * @return Element|Tag|Field
              */
             protected function importNode($newNode)
             {
-                return $this->owner()->importNode($newNode);
+                return $this->doc()->importNode($newNode);
             }
 
             /**
@@ -625,7 +657,7 @@ use volux\Dom;
              */
             public function toArray()
             {
-                return $this->owner()->toArray($this);
+                return $this->doc()->toArray($this);
             }
 
             /**

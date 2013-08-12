@@ -1,4 +1,9 @@
 <?php
+/**
+ * volux\Dom
+ *
+ * @link http://github.com/volux/dom
+ */
 namespace volux\Dom;
 
 use volux\Dom;
@@ -26,27 +31,28 @@ use volux\Dom;
              */
             public static function doc($version = self::VERSION, $encoding = self::ENCODING)
             {
-                $html = new self($version, $encoding);
-                return $html;
+                $xslt = new self($version, $encoding);
+                return $xslt;
             }
 
             /**
              * @param string   $source
              * @param int|null $options
+             * @param bool     $result
              *
-             * @return bool
+             * @return $this|Dom
              */
-            public function loadXML($source, $options = LIBXML_NOCDATA)
+            public function loadXML($source, $options = LIBXML_NOCDATA, &$result = false)
             {
-                $result = parent::loadXML($source, $options);
+                parent::loadXML($source, $options, $result);
                 $this->processor();
-                return $result;
+                return $this;
             }
 
             /**
              * @return \XSLTProcessor
              */
-            public function processor()
+            protected function processor()
             {
                 if (!$this->processor) {
                     $this->processor = new \XSLTProcessor;
@@ -59,16 +65,17 @@ use volux\Dom;
             }
 
             /**
-             * @param string|callable $xslFile
-             * @param Set|Element|Tag|Dom $element
+             * @param string $xslFile
              * @param array  $xsltParameters
-             * @param string $ns
+             * @param Element|Tag|Field $element
+             * @param string $ns namespace
              *
              * @return \DOMDocument
              */
             public function transform($xslFile, $xsltParameters = array(), $element, $ns = '')
             {
-                if (!$this->load($xslFile)) {
+                $this->load($xslFile, LIBXML_NOCDATA, $result = false);
+                if (!$result) {
                     return false;
                 }
                 foreach ($xsltParameters as $name => $value) {

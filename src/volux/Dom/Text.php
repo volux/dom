@@ -1,4 +1,9 @@
 <?php
+/**
+ * volux\Dom
+ *
+ * @link http://github.com/volux/dom
+ */
 namespace volux\Dom;
 
 use volux\Dom;
@@ -13,18 +18,17 @@ use volux\Dom;
         class Text extends \DOMText
         {
             /**
-             * @param $expr
+             * @param string $expr css selector
              *
              * @return bool
              */
             public function is($expr)
             {
-                return !$this->owner()->find(array($expr, $this->getNodePath()))->isEmpty();
+                return !$this->doc()->find(array($expr, $this->getNodePath()))->isEmpty();
             }
 
             /**
-             * name of child node or attribute
-             * @param $expr
+             * @param string $expr css selector
              *
              * @return bool
              */
@@ -42,15 +46,15 @@ use volux\Dom;
             }
 
             /**
-             * @return Dom
+             * @return Dom|Html|Table|Form
              */
-            public function owner()
+            public function doc()
             {
                 return $this->ownerDocument;
             }
 
             /**
-             * @return Element|Tag
+             * @return Element|Tag|Field
              */
             public function parent()
             {
@@ -58,11 +62,11 @@ use volux\Dom;
             }
 
             /**
-             * @return Element|Tag|Text|Cdata
+             * @return Attr|Element|Tag|Field|Text|Cdata|Comment
              */
             public function end()
             {
-                return $this->owner()->context();
+                return $this->doc()->context();
             }
 
             /**
@@ -76,7 +80,7 @@ use volux\Dom;
             }
 
             /**
-             * @return Element|Tag
+             * @return Element|Tag|Field
              */
             public function remove()
             {
@@ -84,24 +88,24 @@ use volux\Dom;
             }
 
             /**
-             * @param $expr
-             * @param null $index
-             * @param null $context
+             * @param string|array $expr css selector (if in array: with axis)
+             * @param null|int $index
+             * @param null|\DOMNode|Attr|Element|Tag|Field|Text|Cdata|Comment $context
              *
-             * @return Element|Tag|Attr|Text|Cdata|Set
+             * @return Attr|Element|Tag|Field|Text|Cdata|Comment|Set
              */
             public function find($expr, $index = null, $context = null)
             {
                 if (is_null($context)) {
                     $context = $this;
                 }
-                return $this->owner()->find($expr, $index, $context);
+                return $this->doc()->find($expr, $index, $context);
             }
 
             /**
-             * @param null $selector
+             * @param null|string $selector css selector
              *
-             * @return Set|Element|Tag|Text|Cdata|Comment
+             * @return Set|Attr|Element|Tag|Field|Text|Cdata|Comment
              */
             public function siblings($selector = null)
             {
@@ -109,7 +113,7 @@ use volux\Dom;
             }
 
             /**
-             * @param int $to
+             * @param null|int $to
              *
              * @return $this|Text|int
              */
@@ -126,29 +130,67 @@ use volux\Dom;
             }
 
             /**
-             * @param null $newText
-             * @param bool $add
+             * @param null|string $newText
+             * @param bool $replace
              *
              * @return $this|Text|string
              */
-            public function text($newText = null, $add = false)
+            public function text($newText = null, $replace = false)
             {
                 if (!is_null($newText)) {
-                    $exitsText = $this->nodeValue;
-                    if ($exitsText && $add) {
-                        $this->nodeValue = $exitsText.$newText;
-                        return $this;
+                    if ($replace) {
+                        $this->nodeValue = '';
                     }
-                    $this->nodeValue = $newText;
+                    $this->nodeValue = $this->nodeValue.$newText;
                     return $this;
                 }
                 return $this->nodeValue;
             }
 
             /**
+             * @param $element
+             *
+             * @return Element|Field|Tag
+             */
+            public function append($element)
+            {
+                return $this->parent()->append($element);
+            }
+
+            /**
+             * @param $element
+             *
+             * @return Element|Field|Tag
+             */
+            public function prepend($element)
+            {
+                return $this->parent()->prepend($element);
+            }
+
+            /**
+             * @param $element
+             *
+             * @return Element|Field|Tag
+             */
+            public function after($element)
+            {
+                return $this->parent()->after($element);
+            }
+
+            /**
+             * @param $element
+             *
+             * @return Element|Field|Tag
+             */
+            public function before($element)
+            {
+                return $this->parent()->before($element);
+            }
+
+            /**
              * @param string|null $name
              *
-             * @return string|Element|Tag
+             * @return string|Element|Tag|Field|Cdata|Comment
              */
             public function name($name = null)
             {
@@ -159,14 +201,14 @@ use volux\Dom;
             }
 
             /**
-             * @param $wrapper
+             * @param string $wrapper node name or well formed xml|html
              *
-             * @return Element|Tag
+             * @return Element|Tag|Field
              */
             public function wrap($wrapper)
             {
                 if (is_string($wrapper)) {
-                    $wrapper = $this->owner()->createElement($wrapper);
+                    $wrapper = $this->doc()->createElement($wrapper);
                 }
                 $parent = $this->parentNode;
                 $wrapper = $parent->appendChild($wrapper);

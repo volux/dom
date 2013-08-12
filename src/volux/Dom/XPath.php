@@ -1,4 +1,9 @@
 <?php
+/**
+ * volux\Dom
+ *
+ * @link http://github.com/volux/dom
+ */
 namespace volux\Dom;
 
 use volux\Dom;
@@ -13,7 +18,7 @@ use volux\Dom;
 
             /**
              * @param string|array $expression
-             * @param null   $contextNode
+             * @param null|\DOMNode|\DOMDocument|Dom|Html|Table|Form|Attr|Element|Tag|Field|Text|Cdata|Comment $contextNode
              *
              * @return \DOMNodeList
              */
@@ -122,19 +127,19 @@ use volux\Dom;
                     $selector
                 );
                 $patterns = array(
-                    // :contains(selectors)
+                    /* :contains(selectors) */
                     '`:contains\(([^\)]*)\)`' => "[contains(string(.),\"\${1}\")]",
-                    // |= attrib
+                    /* |= attrib */
                     '`\[([a-z0-9\_\-]*)\|=([^\]]+)\]`i' => "[@\${1}=\${2} or starts-with(@\${1},concat(\${2},\"-\"))]",
-                    // *= attrib
+                    /* *= attrib */
                     '`\[([a-z0-9\_\-]*)\*=([^\]]+)\]`i' => "[contains(@\${1},\${2})]",
-                    // ~= attrib
+                    /* ~= attrib */
                     '`\[([a-z0-9\_\-]*)~=([^\]]+)\]`i' => "[contains(concat(\" \", normalize-space(@\${1}),\" \"),concat(\" \",\${2},\" \"))]",
-                    // ^= attrib
+                    /* ^= attrib */
                     '`\[([a-z0-9\_\-]*)\^=([^\]]+)\]`i' => "[starts-with(@\${1},\${2})]",
                 );
                 $selector = preg_replace(array_keys($patterns), array_values($patterns), $selector);
-                // $= attrib
+                /* $= attrib */
                 $selector = preg_replace_callback(
                     '`\[([a-z0-9\_\-]*)\$=([^\]]+)\]`i',
                     function ($matches) {
@@ -143,14 +148,14 @@ use volux\Dom;
                     $selector
                 );
                 $patterns = array(
-                    // != attrib
+                    /* != attrib */
                     '`\[([a-z0-9\_\-]*)\!=([^\]]+)\]`i' => "[not(@\${1}) or @\${1}!=\${2}]",
-                    // ids and classes
+                    /* ids and classes */
                     '`#([a-z0-9\_\-]*)`i' => "[@id=\"\${1}\"]",
                     '`\.([a-z0-9\_\-]*)`i' => "[contains(concat(\" \", normalize-space(@class),\" \"),\" \${1} \")]",
-                    // local-name
+                    /* local-name */
                     '`(^([a-z][a-z0-9]*))`i' => "[local-name()=\"\${1}\"]",
-                    // normalize multiple predicates
+                    /* normalize multiple predicates */
                     '`\]\[([^\]]+)`' => " and (\${1})",
                     '/`/' => '.',
                 );
