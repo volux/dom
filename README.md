@@ -60,6 +60,74 @@ Dom\Html::doc()->load('example.html')
 /* each tags with class="content" will be transformed and replaced */
 ```
 
+### Build form example
+
+```php
+use volux\Dom;
+
+$form = new Dom\Form();
+$form
+    ->fieldSet('Group 1')
+        ->add()
+            ->input()->name('name')
+                ->placeholder('Name')
+                ->required()
+                ->dataList(array('Nike', 'Mike', 'Fred'))
+        ->add()
+            ->select(array('1'=>'One','2'=>'Two','3'=>'Three'), '2')
+            ->name('sel')
+            ->label('Select item')
+        ->add()
+            ->input('0a0b0c0d', 'hidden')->name('token')
+->form()
+    ->fieldSet('Group 2')
+        ->add()
+            ->radio('choose', array('r'=>'Red', 'g'=>'Green', 'b'=>'Blue'))
+        ->add()
+            ->space()
+        ->add()
+            ->textarea('', array('name'=>'desc'))->label('Description')
+                ->rows(5)->addClass('span4')
+                ->help('Input short description about it', 'help-block')
+->form()
+    ->checkbox('confirm', array('Confirm'))
+->form()
+    ->section('form-actions')
+        ->add()
+            ->buttonSubmit('Send as GET')
+                ->addClass('btn btn-primary')
+        ->add()
+            ->space('h')
+        ->add()
+            ->buttonSubmit('Send as POST')
+                ->addClass('btn btn-success')
+                ->formMethod('post')
+;
+
+$html = new Dom\Html();
+$html
+    ->root()->attr(array('lang' => 'en'));
+$html
+    ->meta(array('charset' => Dom::ENCODING))
+    ->meta(array(
+        'http-equiv' => 'X-UA-Compatible',
+        'content'    => 'IE=edge,chrome=1',
+    ))
+    ->meta(array(
+        'name'    => 'viewport',
+        'content' => 'user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0',
+    ))
+    ->title('volux\Dom\Form Test')
+    ->stylesheet('//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css')
+    ->body()
+        ->append('div')->attr('class', 'row')
+            ->append('div')->attr('class', 'span4 offset1')
+                ->append($form) /* point to add builded form to main html */
+;
+
+echo $html;
+```
+
 ### Build html example
 
 ```php
@@ -159,21 +227,16 @@ Result:
 
 ### TODO
 
-1. Implement most important & relevant functional in jQuery API Manipulation & Traversing sections:
+Implement most important & relevant functional in jQuery API Manipulation & Traversing sections:
  + .contents()
  + .css()
  + .detach()
- + .has()
  + .index()
- + .map()
  + .nextAll()
  + .nextUntil()
  + .not()
  + .slice()
  + .toggleClass()
- + .val()
  + .wrapAll()
  + .wrapInner()
  + e.t.c.
-
-2. Create class volux\Form for easy build HTML Forms
