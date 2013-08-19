@@ -1,18 +1,19 @@
 ## volux\Dom
 
 PHP version >= 5.3.6 extended DOM Objects via \DOMDocument::registerNodeClass with jQuery-like functionality:
- + volux\Dom > \DOMDocument, volux\Attr > \DOMAttr, volux\Tag > volux\Element > \DOMElement, volux\Text > \DOMText, volux\Comment > \DOMComment, volux\Cdata > \DOMCdataSection;
- + extended \DOMXPath via volux\XPath with ***converting CSS selectors to XPath expression***;
- + volux\Xslt class implement shadow load XSLT file or XSLT string (including from lambda function) and transformation with replacing target element;
+ + volux\Dom\Html > volux\Dom > \DOMDocument, volux\Dom\Attr > \DOMAttr, volux\Dom\Tag > volux\Dom\Element > \DOMElement, volux\Dom\Text > \DOMText, volux\Dom\Comment > \DOMComment, volux\Dom\Cdata > \DOMCdataSection;
+ + volux\Dom\Table and volux\Dom\Form (with volux\Dom\Field) helpers;
+ + extended \DOMXPath via volux\Dom\XPath with ***converting CSS selectors to XPath expression***;
+ + volux\Dom\Xslt class implement shadow load XSLT file or XSLT string (including from lambda function) and transformation with replacing target element;
  + wrapped DOMNodelist and DOMNamedNodeMap with volux\Set who implement \ArrayIterator and \RecursiveIterator interfaces.
 
 ### Links
 
-[volux\dom Wiki](https://github.com/volux/dom/wiki)
+[volux\Dom Wiki](https://github.com/volux/dom/wiki)
 
 ### Install
 
-Composer: add to your composer.json
+Add to your composer.json
 ```json
 {
     "require": {
@@ -20,6 +21,7 @@ Composer: add to your composer.json
     }
 }
 ```
+or copy ``src\volux`` to ``vendor`` directory and use your PRS-0 autoloader.
 
 ### Parse external html example
 
@@ -109,14 +111,6 @@ $html
     ->root()->attr(array('lang' => 'en'));
 $html
     ->meta(array('charset' => Dom::ENCODING))
-    ->meta(array(
-        'http-equiv' => 'X-UA-Compatible',
-        'content'    => 'IE=edge,chrome=1',
-    ))
-    ->meta(array(
-        'name'    => 'viewport',
-        'content' => 'user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0',
-    ))
     ->title('volux\Dom\Form Test')
     ->stylesheet('//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css')
     ->body()
@@ -128,7 +122,7 @@ $html
 echo $html;
 ```
 
-### Build html example
+### Build html complex example
 
 ```php
 <?php
