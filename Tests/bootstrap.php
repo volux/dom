@@ -2,13 +2,22 @@
 function loader($className)
 {
     $paths = array(
-        'Tests' => 'Tests/',
-        'volux' => 'src/volux/',
+        'PHPUnit' => 'PHPUnit',
+        'Tests' => 'Tests',
+        'volux' => 'src'.DIRECTORY_SEPARATOR.'volux',
     );
+    $find = function($path) use ($paths) {
+        if (isset($paths[$path])) {
+            return $paths[$path];
+        }
+        return '';
+    };
     $path = explode('\\', str_replace('_', '\\', $className));
-    $file = $paths[array_shift($path)].implode(DIRECTORY_SEPARATOR, $path).'.php';
+    $file = $find(array_shift($path)).DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, $path).'.php';
     var_dump($file);
-    require $file;
+    if (is_file($file)) {
+        require $file;
+    }
 }
 
 spl_autoload_register('loader');
