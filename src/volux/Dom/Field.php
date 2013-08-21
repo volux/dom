@@ -6,7 +6,7 @@
  */
 namespace volux\Dom;
 
-use volux\Dom;
+use volux\Dom\Doc;
 /**
  * Class Field
  * @package volux\Dom
@@ -17,7 +17,7 @@ class Field extends Tag
     /**
      * @param bool $root
      *
-     * @return Dom|Form|Element|Field|Tag
+     * @return Doc|Form|Element|Field|Tag
      */
     public function add($root = false)
     {
@@ -28,7 +28,7 @@ class Field extends Tag
     }
 
     /**
-     * @return Form|Dom
+     * @return Form|Doc
      */
     public function form()
     {

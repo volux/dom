@@ -6,7 +6,7 @@
  */
 namespace volux\Dom;
 
-use volux\Dom;
+use volux\Dom\Doc;
 /**
  * Class Element
  * @package volux\Dom
@@ -29,7 +29,7 @@ class Element extends \DOMElement
     }
 
     /**
-     * @return Dom|Html|Table|Form
+     * @return Doc|Html|Table|Form
      */
     public function doc()
     {
@@ -61,7 +61,7 @@ class Element extends \DOMElement
      */
     public function isEmpty()
     {
-        return (Dom::NAME_NOT_MATCHED === $this->name());
+        return (Doc::NAME_NOT_MATCHED === $this->name());
     }
 
     /**
@@ -74,7 +74,7 @@ class Element extends \DOMElement
         if (is_string($child)) {
             $child = $this->doc()->createElement($child);
         }
-        if ($child instanceof Dom) {
+        if ($child instanceof Doc) {
             $child = $child->documentElement;
         }
         return $this->appendChild($this->importNode($child));
@@ -285,7 +285,7 @@ class Element extends \DOMElement
     }
 
     /**
-     * @return Element|Tag|Field|Dom
+     * @return Element|Tag|Field|Doc
      */
     public function parent()
     {
@@ -404,7 +404,7 @@ class Element extends \DOMElement
             foreach ($name as $a) {
                 /** @var $a Attr */
                 $this->setAttributeNode($a);
-                if (Dom::ID_ATTR === $a->name) {
+                if (Doc::ID_ATTR === $a->name) {
                     $this->setIdAttributeNode($a, true);
                 }
             }
@@ -418,7 +418,7 @@ class Element extends \DOMElement
                     $this->setAttribute($name, $name);
                 } else {
                     $this->setAttribute($name, $value);
-                    if (Dom::ID_ATTR === $name) {
+                    if (Doc::ID_ATTR === $name) {
                         $this->setIdAttribute($name, true);
                     }
                 }

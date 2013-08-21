@@ -6,7 +6,7 @@
  */
 namespace volux\Dom;
 
-use volux\Dom;
+use volux\Dom\Doc;
 /**
  * Class Attr
  * @package volux\Dom
@@ -36,11 +36,11 @@ class Attr extends \DOMAttr
      */
     public function isEmpty()
     {
-        return (Dom::NAME_NOT_MATCHED === $this->nodeName) or ($this->nodeValue === '');
+        return (Doc::NAME_NOT_MATCHED === $this->nodeName) or ($this->nodeValue === '');
     }
 
     /**
-     * @return Dom|Html|Table|Form
+     * @return Doc|Html|Table|Form
      */
     protected function doc()
     {

@@ -6,13 +6,13 @@
  */
 namespace volux\Dom;
 
-use volux\Dom;
+use volux\Dom\Doc;
 /**
  * Class Html
  * @package volux\Dom
  * @author  Andrey Skulov <andrey.skulov@gmail.com>
  */
-class Html extends Dom
+class Html extends Doc
 {
     const
         ELEMENT_CLASS = '\volux\Dom\Tag',

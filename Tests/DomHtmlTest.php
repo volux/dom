@@ -1,12 +1,12 @@
 <?php
-namespace Tests;
+namespace tests;
 use \volux\Dom;
 
 class DomHtmlTest extends \PHPUnit_Framework_TestCase
 {
 
     /**
-     * @var \volux\Dom
+     * @var \volux\Dom\Doc
      */
     private $dom;
     private $text = 'Hello Foo';

@@ -4,14 +4,14 @@
  *
  * @link http://github.com/volux/dom
  */
-namespace volux;
+namespace volux\Dom;
 
 /**
- * Class Dom
+ * Class Doc
  * @package volux\Dom
  * @author  Andrey Skulov <andrey.skulov@gmail.com>
  */
-class Dom extends \DOMDocument
+class Doc extends \DOMDocument
 {
     const
         NAME_NOT_MATCHED = 'not.matched',
@@ -26,15 +26,15 @@ class Dom extends \DOMDocument
     ;
 
     /**
-     * @var Dom\Element|Dom\Tag|Dom\Field
+     * @var Element|Tag|Field
      */
     public $documentElement;
     /**
-     * @var Dom\XPath
+     * @var XPath
      */
     public $xPath;
     /**
-     * @var Dom\Element|Dom\Tag|Dom\Field
+     * @var Element|Tag|Field
      */
     protected $contextElement;
 
@@ -87,13 +87,13 @@ class Dom extends \DOMDocument
     }
 
     /**
-     * @param Dom $doc
+     * @param Doc $doc
      *
-     * @return Dom
+     * @return Doc
      */
-    protected function setXPath(Dom $doc)
+    protected function setXPath(Doc $doc)
     {
-        $doc->xPath = new Dom\XPath($doc);
+        $doc->xPath = new XPath($doc);
         if ($doc->namespaceURI) {
             $doc->ns = $doc->lookupNamespaceUri($doc->namespaceURI);
             $doc->xPath->registerNamespace('x', $doc->ns);
@@ -106,7 +106,7 @@ class Dom extends \DOMDocument
      * @param int|null $options
      * @param bool     $result
      *
-     * @return $this|Dom
+     * @return $this|Doc
      */
     public function load($source, $options = LIBXML_NOCDATA, &$result = false)
     {
@@ -124,7 +124,7 @@ class Dom extends \DOMDocument
      * @param int|null $options
      * @param bool     $result
      *
-     * @return $this|Dom
+     * @return $this|Doc
      */
     public function loadXML($source, $options = LIBXML_NOCDATA, &$result = false)
     {
@@ -137,7 +137,7 @@ class Dom extends \DOMDocument
     /**
      * @param string $source
      *
-     * @return $this|Dom
+     * @return $this|Doc
      */
     public function loadNsXML($source)
     {
@@ -155,7 +155,7 @@ class Dom extends \DOMDocument
      * @param string $source or to string convertible
      * @param bool   $result
      *
-     * @return $this|Dom
+     * @return $this|Doc
      */
     public function loadHTML($source, &$result = false)
     {
@@ -170,7 +170,7 @@ class Dom extends \DOMDocument
      * @param string $filename
      * @param bool   $result
      *
-     * @return $this|Dom
+     * @return $this|Doc
      */
     public function loadHTMLFile($filename, &$result = false)
     {
@@ -187,7 +187,7 @@ class Dom extends \DOMDocument
      * @param string $version
      * @param string $encoding
      *
-     * @return Dom
+     * @return Doc
      */
     public static function doc($version = self::VERSION, $encoding = self::ENCODING)
     {
@@ -198,7 +198,7 @@ class Dom extends \DOMDocument
     /**
      * @param $name
      *
-     * @return Dom\Element|Dom\Tag|Dom\Field
+     * @return Element|Tag|Field
      */
     public function root($name = null)
     {
@@ -215,7 +215,7 @@ class Dom extends \DOMDocument
     /**
      * @param $child
      *
-     * @return Dom\Element|Dom\Tag|Dom\Field
+     * @return Element|Tag|Field
      */
     public function append($child)
     {
@@ -226,10 +226,10 @@ class Dom extends \DOMDocument
     }
 
     /**
-     * @param $node Dom\Element
-     * @return Dom\Element|Dom\Tag|Dom\Field
+     * @param $node Element
+     * @return Element|Tag|Field
      */
-    public function appendTo(Dom\Element $node)
+    public function appendTo(Element $node)
     {
         return $node->append($this->root());
     }
@@ -239,7 +239,7 @@ class Dom extends \DOMDocument
      * @param null $index
      * @param null $context
      *
-     * @return Dom\Element|Dom\Tag|Dom\Field|Dom\Set
+     * @return Element|Tag|Field|Set
      */
     public function find($expr, $index = null, $context = null)
     {
@@ -257,7 +257,7 @@ class Dom extends \DOMDocument
      * @param \DOMNode|bool $node
      * @param null|string $expr
      *
-     * @return Dom\Element|Dom\Tag|Dom\Field
+     * @return Element|Tag|Field
      */
     public function notEmpty($node, $expr = null)
     {
@@ -272,7 +272,7 @@ class Dom extends \DOMDocument
     /**
      * @param string $name
      *
-     * @return Dom\Set
+     * @return Set
      */
     public function findByTag($name)
     {
@@ -283,7 +283,7 @@ class Dom extends \DOMDocument
      * @param string $id
      * @param bool $internal
      *
-     * @return Dom\Element|Dom\Tag|Dom\Field
+     * @return Element|Tag|Field
      */
     public function findById($id, $internal = true)
     {
@@ -294,7 +294,7 @@ class Dom extends \DOMDocument
     }
 
     /**
-     * @return Dom\Element|Dom\Tag|Dom\Field|$this|Dom
+     * @return Element|Tag|Field|$this|Doc
      */
     public function context()
     {
@@ -309,14 +309,14 @@ class Dom extends \DOMDocument
      * @param array $xsltParameters
      * @param null|\DOMNode  $element
      *
-     * @return Dom\Element|Dom\Tag|Dom\Field
+     * @return Element|Tag|Field
      */
     public function xslt($xslFile, $xsltParameters = array(), $element = null)
     {
         if (is_null($element)) {
             $element = $this->documentElement;
         }
-        $newTree = Dom\Xslt::doc()->transform($xslFile, $xsltParameters, $element);
+        $newTree = Xslt::doc()->transform($xslFile, $xsltParameters, $element);
         if ($newTree) {
             return $element->replace($newTree->documentElement);
         }
@@ -327,18 +327,18 @@ class Dom extends \DOMDocument
     /**
      * @param array|\DOMNamedNodeMap|\DOMNodeList $list
      *
-     * @return Dom\Set
+     * @return Set
      */
     public function set($list)
     {
-        return new Dom\Set($list, $this);
+        return new Set($list, $this);
     }
 
     /**
      * @param string $name node name or well formed xml fragment or text
      * @param null|string $value
      *
-     * @return Dom\Element|Dom\Tag|Dom\Field
+     * @return Element|Tag|Field
      */
     public function createElement($name, $value = null)
     {
@@ -383,7 +383,7 @@ class Dom extends \DOMDocument
      * @param string $name attribute name
      * @param string $value
      *
-     * @return Dom\Attr
+     * @return Attr
      */
     public function createAttr($name, $value = '')
     {
@@ -395,7 +395,7 @@ class Dom extends \DOMDocument
     /**
      * @param string $string or convertible to string
      *
-     * @return Dom\Text
+     * @return Text
      */
     public function createText($string)
     {
@@ -405,7 +405,7 @@ class Dom extends \DOMDocument
     /**
      * @param string $string or convertible to string
      *
-     * @return Dom\Cdata
+     * @return Cdata
      */
     public function createCData($string)
     {
@@ -415,7 +415,7 @@ class Dom extends \DOMDocument
     /**
      * @param string $string or convertible to string
      *
-     * @return Dom\Comment
+     * @return Comment
      */
     public function createComment($string)
     {
@@ -426,7 +426,7 @@ class Dom extends \DOMDocument
      * @param string $uri
      * @param string $type
      *
-     * @return $this|Dom
+     * @return $this|Doc
      */
     public function stylesheet($uri, $type = 'xsl')
     {
@@ -438,7 +438,7 @@ class Dom extends \DOMDocument
      * @param \DOMNode $importedNode
      * @param bool $deep
      *
-     * @return Dom\Element|Dom\Tag|Dom\Field
+     * @return Element|Tag|Field
      */
     public function importNode(\DOMNode $importedNode, $deep = true)
     {
@@ -470,7 +470,7 @@ class Dom extends \DOMDocument
         }
         if ($node->hasChildNodes()) {
             foreach ($node->childNodes as $child) {
-                /** @var $child Dom\Element|Dom\Tag|Dom\Attr|Dom\Text|Dom\Cdata|Dom\Comment */
+                /** @var $child Element|Tag|Attr|Text|Cdata|Comment */
                 $result[$node->nodeName][] = $child->toArray();
             }
         } else {
@@ -482,7 +482,7 @@ class Dom extends \DOMDocument
     /**
      * @param array $array
      *
-     * @return Dom|Dom\Element|Dom\Tag|Dom\Field
+     * @return Doc|Element|Tag|Field
      */
     public function createFromArray(array $array)
     {
@@ -493,7 +493,7 @@ class Dom extends \DOMDocument
      * @param array $array
      * @param       $node
      *
-     * @return Dom|Dom\Element|Dom\Tag|Dom\Field
+     * @return Doc|Element|Tag|Field
      */
     protected function createDomFromArray(array $array, $node)
     {
@@ -505,30 +505,30 @@ class Dom extends \DOMDocument
                         break;
 
                     case '#text':
-                        /** @var Dom\Element|Dom\Tag $node */
+                        /** @var Element|Tag $node */
                         $node->text($value);
                         return $node;
                         break;
 
                     case '#comment':
-                        /** @var Dom\Element|Dom\Tag $node */
+                        /** @var Element|Tag $node */
                         $node = $node->append($this->createComment($value));
                         break;
 
                     case '#cdata-section':
-                        /** @var Dom\Element|Dom\Tag $node */
+                        /** @var Element|Tag $node */
                         $node = $node->append($this->createCData($value));
                         break;
 
                     case '@':
-                        /** @var Dom\Element|Dom\Tag $node */
+                        /** @var Element|Tag $node */
                         $node->attr($value);
                         $value = false;
                         $key = 0;
                         break;
 
                     default:
-                        /** @var Dom\Element|Dom\Tag $node */
+                        /** @var Element|Tag $node */
                         $node = $node->append($this->createElement($key));
                 }
             }

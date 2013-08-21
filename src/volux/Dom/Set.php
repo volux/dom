@@ -6,7 +6,7 @@
  */
 namespace volux\Dom;
 
-use volux\Dom;
+use volux\Dom\Doc;
 /**
  * Class Set
  * @package volux\Dom
@@ -15,14 +15,14 @@ use volux\Dom;
 class Set extends \ArrayIterator implements \RecursiveIterator
 {
     /**
-     * @var Dom|Html|Form
+     * @var Doc|Html|Form
      */
     protected $ownerDocument;
     /**
      * @param \DOMNodelist|\DOMNamedNodeMap|Set|array $nodeList
-     * @param Dom|Html|Form $dom
+     * @param Doc|Html|Form $dom
      */
-    public function __construct($nodeList, Dom &$dom)
+    public function __construct($nodeList, Doc &$dom)
     {
         $this->ownerDocument = $dom;
         $nodes = array();
@@ -33,7 +33,7 @@ class Set extends \ArrayIterator implements \RecursiveIterator
     }
 
     /**
-     * @return Dom|Html|Form
+     * @return Doc|Html|Form
      */
     public function doc()
     {

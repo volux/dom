@@ -1,7 +1,7 @@
 ## volux\Dom [![Build Status](https://secure.travis-ci.org/volux/dom.png?branch=master)](http://travis-ci.org/volux/dom)
 
 PHP version >= 5.3.6 extended DOM Objects via \DOMDocument::registerNodeClass with jQuery-like functionality:
- + volux\Dom\Html > volux\Dom > \DOMDocument, volux\Dom\Attr > \DOMAttr, volux\Dom\Tag > volux\Dom\Element > \DOMElement, volux\Dom\Text > \DOMText, volux\Dom\Comment > \DOMComment, volux\Dom\Cdata > \DOMCdataSection;
+ + volux\Dom\Html > volux\Dom\Doc > \DOMDocument, volux\Dom\Attr > \DOMAttr, volux\Dom\Tag > volux\Dom\Element > \DOMElement, volux\Dom\Text > \DOMText, volux\Dom\Comment > \DOMComment, volux\Dom\Cdata > \DOMCdataSection;
  + volux\Dom\Table and volux\Dom\Form (with volux\Dom\Field) helpers;
  + extended \DOMXPath via volux\Dom\XPath with ***converting CSS selectors to XPath expression***;
  + volux\Dom\Xslt class implement shadow load XSLT file or XSLT string (including from lambda function) and transformation with replacing target element;
@@ -27,16 +27,15 @@ or copy ``src\volux`` to ``vendor`` directory and use your PRS-0 autoloader.
 
 ```php
 <?php
-use volux\Dom;
+use volux\Dom\Html;
 
-$htmlResult = new Dom\Html();
+$htmlResult = new Html();
 
 $htmlResult->title('Google News Test');
 
-Dom\Html::doc()->load('http://news.google.com/news')
+Html::doc()->load('http://news.google.com/news')
     ->find('.titletext')
-        ->each(function (Dom\Tag $node, $index) use ($htmlResult) {
-            /** @var $node Dom\Tag */
+        ->each(function ($node, $index) use ($htmlResult) {
             $htmlResult->body()
                 ->append('p')
                     ->append('span')->text(($index + 1) . ': ')
@@ -52,9 +51,9 @@ echo $htmlResult;
 ```php
 <?php
 
-use volux\Dom;
+use volux\Dom\Doc;
 
-Dom\Html::doc()->load('example.html')
+Doc::doc()->load('example.xml')
     ->find('.content')->xslt('content.xsl')
         ->end()
     ->saveHTMLfile('transformed.html');
@@ -65,9 +64,10 @@ Dom\Html::doc()->load('example.html')
 ### Build form example
 
 ```php
-use volux\Dom;
+use volux\Dom\Html;
+use volux\Dom\Form;
 
-$form = new Dom\Form();
+$form = new Form();
 $form
     ->fieldSet('Group 1')
         ->add()
@@ -106,11 +106,11 @@ $form
                 ->formMethod('post')
 ;
 
-$html = new Dom\Html();
+$html = new Html();
 $html
     ->root()->attr(array('lang' => 'en'));
 $html
-    ->meta(array('charset' => Dom::ENCODING))
+    ->meta(array('charset' => Html::ENCODING))
     ->title('volux\Dom\Form Test')
     ->stylesheet('//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css')
     ->body()
@@ -128,7 +128,7 @@ echo $html;
 <?php
 use volux\Dom\Html;
 
-$html = new Dom\Html();
+$html = new Html();
 $html
     ->root()->attr('lang', 'en');
 $html

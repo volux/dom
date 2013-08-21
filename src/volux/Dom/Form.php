@@ -6,13 +6,13 @@
  */
 namespace volux\Dom;
 
-use volux\Dom;
+use volux\Dom\Doc;
 /**
  * Class Form
  * @package volux\Dom
  * @author  Andrey Skulov <andrey.skulov@gmail.com>
  */
-class Form extends Dom
+class Form extends Doc
 {
     const
         ELEMENT_CLASS = '\volux\Dom\Field',
@@ -52,7 +52,7 @@ class Form extends Dom
     /**
      * @param bool|string $uri string or false
      *
-     * @return $this|Form|Dom
+     * @return $this|Form|Doc
      */
     public function action($uri = false)
     {
@@ -63,7 +63,7 @@ class Form extends Dom
     /**
      * @param string|bool $method 'get'|'post'|false
      *
-     * @return $this|Form|Dom
+     * @return $this|Form|Doc
      */
     protected function method($method = 'get')
     {
@@ -74,7 +74,7 @@ class Form extends Dom
     /**
      * @param string $name
      *
-     * @return $this|Form|Dom
+     * @return $this|Form|Doc
      */
     public function name($name)
     {
@@ -85,7 +85,7 @@ class Form extends Dom
     /**
      * @param string|bool $target 'name'|'_self'|'_blank'|'_parent'|'_top'|false
      *
-     * @return $this|Form|Dom
+     * @return $this|Form|Doc
      */
     public function target($target = '_self')
     {
@@ -96,7 +96,7 @@ class Form extends Dom
     /**
      * @param bool $is
      *
-     * @return $this|Form|Dom
+     * @return $this|Form|Doc
      */
     public function noValidate($is = true)
     {
@@ -107,7 +107,7 @@ class Form extends Dom
     /**
      * @param string|bool $type 'app'|'multi'|'plain'|false
      *
-     * @return $this|Form|Dom
+     * @return $this|Form|Doc
      */
     public function encodeType($type = 'app')
     {
@@ -118,7 +118,7 @@ class Form extends Dom
     /**
      * @param string $charset
      *
-     * @return $this|Form|Dom
+     * @return $this|Form|Doc
      */
     public function acceptCharset($charset = self::ENCODING)
     {
@@ -129,7 +129,7 @@ class Form extends Dom
     /**
      * @param string|bool $is 'on'|'off'|false
      *
-     * @return $this|Form|Dom
+     * @return $this|Form|Doc
      */
     public function autocomplete($is = 'on')
     {
@@ -140,7 +140,7 @@ class Form extends Dom
     /**
      * @param bool|Field|Tag|Element $root
      *
-     * @return $this|Form|Dom|Element|Field|Tag
+     * @return $this|Form|Doc|Element|Field|Tag
      */
     public function to($root = false)
     {

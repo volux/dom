@@ -2,8 +2,7 @@
 function loader($className)
 {
     $paths = array(
-        'PHPUnit' => 'PHPUnit',
-        'Tests' => 'Tests',
+        'tests' => 'tests',
         'volux' => 'src'.DIRECTORY_SEPARATOR.'volux',
     );
     $find = function($path) use ($paths) {

@@ -6,13 +6,13 @@
  */
 namespace volux\Dom;
 
-use volux\Dom;
+use volux\Dom\Doc;
 /**
  * Class Xslt
  * @package volux\Dom
  * @author  Andrey Skulov <andrey.skulov@gmail.com>
  */
-class Xslt extends Dom
+class Xslt extends Doc
 {
 
     /**
@@ -37,7 +37,7 @@ class Xslt extends Dom
      * @param int|null $options
      * @param bool     $result
      *
-     * @return $this|Dom
+     * @return $this|Doc
      */
     public function loadXML($source, $options = LIBXML_NOCDATA, &$result = false)
     {
