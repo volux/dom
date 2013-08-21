@@ -147,10 +147,11 @@ class Html extends Dom
     /**
      * @param string $source
      * @param int|null $options
+     * @param bool     $result
      *
      * @return $this|Html
      */
-    public function load($source, $options = LIBXML_NOCDATA)
+    public function load($source, $options = LIBXML_NOCDATA, &$result = false)
     {
         if (is_file($source)) {
             $source = file_get_contents($source, FILE_USE_INCLUDE_PATH);

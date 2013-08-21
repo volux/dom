@@ -15,14 +15,23 @@ use volux\Dom;
 class XPath extends \DOMXPath {
 
     /**
+     * @return \DOMDocument|Dom|Html|Table|Form
+     */
+    public function doc()
+    {
+        return $this->document;
+    }
+
+    /**
      * @param string|array $expression
-     * @param null|\DOMNode|\DOMDocument|Dom|Html|Table|Form|Attr|Element|Tag|Field|Text|Cdata|Comment $contextNode
+     * @param null|\DOMNode|\DOMDocument|Dom|Html|Table|Form|Attr|Element|Tag|Field|Text|Cdata|Comment $contextnode
+     * @param bool $registerNodeNS
      *
      * @return \DOMNodeList
      */
-    public function query($expression, $contextNode = null)
+    public function query($expression, \DOMNode $contextnode = null, $registerNodeNS = true)
     {
-        return parent::query($this->expression($expression), $contextNode);
+        return parent::query($this->expression($expression), $contextnode, $registerNodeNS);
     }
 
     /**
