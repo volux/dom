@@ -1,4 +1,4 @@
-## volux\Dom
+## volux\Dom [![Build Status](https://secure.travis-ci.org/volux/dom.png?branch=master)](http://travis-ci.org/volux/dom)
 
 PHP version >= 5.3.6 extended DOM Objects via \DOMDocument::registerNodeClass with jQuery-like functionality:
  + volux\Dom\Html > volux\Dom > \DOMDocument, volux\Dom\Attr > \DOMAttr, volux\Dom\Tag > volux\Dom\Element > \DOMElement, volux\Dom\Text > \DOMText, volux\Dom\Comment > \DOMComment, volux\Dom\Cdata > \DOMCdataSection;
