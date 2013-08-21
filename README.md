@@ -1,7 +1,7 @@
 ## volux\Dom [![Build Status](https://secure.travis-ci.org/volux/dom.png?branch=master)](http://travis-ci.org/volux/dom)
 
 PHP version >= 5.3.6 extended DOM Objects via \DOMDocument::registerNodeClass with jQuery-like functionality:
- + volux\Dom\Html > volux\Dom\Doc > \DOMDocument, volux\Dom\Attr > \DOMAttr, volux\Dom\Tag > volux\Dom\Element > \DOMElement, volux\Dom\Text > \DOMText, volux\Dom\Comment > \DOMComment, volux\Dom\Cdata > \DOMCdataSection;
+ + volux\Dom\Html > volux\Dom\Document > \DOMDocument, volux\Dom\Attr > \DOMAttr, volux\Dom\Tag > volux\Dom\Element > \DOMElement, volux\Dom\Text > \DOMText, volux\Dom\Comment > \DOMComment, volux\Dom\Cdata > \DOMCdataSection;
  + volux\Dom\Table and volux\Dom\Form (with volux\Dom\Field) helpers;
  + extended \DOMXPath via volux\Dom\XPath with ***converting CSS selectors to XPath expression***;
  + volux\Dom\Xslt class implement shadow load XSLT file or XSLT string (including from lambda function) and transformation with replacing target element;
@@ -51,9 +51,9 @@ echo $htmlResult;
 ```php
 <?php
 
-use volux\Dom\Doc;
+use volux\Dom\Document;
 
-Doc::doc()->load('example.xml')
+Document::doc()->load('example.xml')
     ->find('.content')->xslt('content.xsl')
         ->end()
     ->saveHTMLfile('transformed.html');

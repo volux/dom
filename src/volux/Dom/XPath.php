@@ -6,7 +6,7 @@
  */
 namespace volux\Dom;
 
-use volux\Dom\Doc;
+use volux\Dom\Document;
 /**
  * Class XPath
  * @package volux\Dom
@@ -15,7 +15,7 @@ use volux\Dom\Doc;
 class XPath extends \DOMXPath {
 
     /**
-     * @return \DOMDocument|Doc|Html|Table|Form
+     * @return \DOMDocument|Document|Html|Table|Form
      */
     public function doc()
     {
@@ -24,7 +24,7 @@ class XPath extends \DOMXPath {
 
     /**
      * @param string|array $expression
-     * @param null|\DOMNode|\DOMDocument|Doc|Html|Table|Form|Attr|Element|Tag|Field|Text|Cdata|Comment $contextnode
+     * @param null|\DOMNode|\DOMDocument|Document|Html|Table|Form|Attr|Element|Tag|Field|Text|Cdata|Comment $contextnode
      * @param bool $registerNodeNS
      *
      * @return \DOMNodeList

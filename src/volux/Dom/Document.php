@@ -7,11 +7,11 @@
 namespace volux\Dom;
 
 /**
- * Class Doc
+ * Class Document
  * @package volux\Dom
  * @author  Andrey Skulov <andrey.skulov@gmail.com>
  */
-class Doc extends \DOMDocument
+class Document extends \DOMDocument
 {
     const
         NAME_NOT_MATCHED = 'not.matched',
@@ -87,11 +87,11 @@ class Doc extends \DOMDocument
     }
 
     /**
-     * @param Doc $doc
+     * @param Document $doc
      *
-     * @return Doc
+     * @return Document
      */
-    protected function setXPath(Doc $doc)
+    protected function setXPath(Document $doc)
     {
         $doc->xPath = new XPath($doc);
         if ($doc->namespaceURI) {
@@ -106,7 +106,7 @@ class Doc extends \DOMDocument
      * @param int|null $options
      * @param bool     $result
      *
-     * @return $this|Doc
+     * @return $this|Document
      */
     public function load($source, $options = LIBXML_NOCDATA, &$result = false)
     {
@@ -124,7 +124,7 @@ class Doc extends \DOMDocument
      * @param int|null $options
      * @param bool     $result
      *
-     * @return $this|Doc
+     * @return $this|Document
      */
     public function loadXML($source, $options = LIBXML_NOCDATA, &$result = false)
     {
@@ -137,7 +137,7 @@ class Doc extends \DOMDocument
     /**
      * @param string $source
      *
-     * @return $this|Doc
+     * @return $this|Document
      */
     public function loadNsXML($source)
     {
@@ -155,7 +155,7 @@ class Doc extends \DOMDocument
      * @param string $source or to string convertible
      * @param bool   $result
      *
-     * @return $this|Doc
+     * @return $this|Document
      */
     public function loadHTML($source, &$result = false)
     {
@@ -170,7 +170,7 @@ class Doc extends \DOMDocument
      * @param string $filename
      * @param bool   $result
      *
-     * @return $this|Doc
+     * @return $this|Document
      */
     public function loadHTMLFile($filename, &$result = false)
     {
@@ -187,7 +187,7 @@ class Doc extends \DOMDocument
      * @param string $version
      * @param string $encoding
      *
-     * @return Doc
+     * @return Document
      */
     public static function doc($version = self::VERSION, $encoding = self::ENCODING)
     {
@@ -294,7 +294,7 @@ class Doc extends \DOMDocument
     }
 
     /**
-     * @return Element|Tag|Field|$this|Doc
+     * @return Element|Tag|Field|$this|Document
      */
     public function context()
     {
@@ -426,7 +426,7 @@ class Doc extends \DOMDocument
      * @param string $uri
      * @param string $type
      *
-     * @return $this|Doc
+     * @return $this|Document
      */
     public function stylesheet($uri, $type = 'xsl')
     {
@@ -482,7 +482,7 @@ class Doc extends \DOMDocument
     /**
      * @param array $array
      *
-     * @return Doc|Element|Tag|Field
+     * @return Document|Element|Tag|Field
      */
     public function createFromArray(array $array)
     {
@@ -493,7 +493,7 @@ class Doc extends \DOMDocument
      * @param array $array
      * @param       $node
      *
-     * @return Doc|Element|Tag|Field
+     * @return Document|Element|Tag|Field
      */
     protected function createDomFromArray(array $array, $node)
     {

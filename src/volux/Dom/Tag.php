@@ -6,7 +6,7 @@
  */
 namespace volux\Dom;
 
-use volux\Dom\Doc;
+use volux\Dom\Document;
 /**
  * Class Tag
  * @package volux\Dom

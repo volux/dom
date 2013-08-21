@@ -6,7 +6,7 @@
  */
 namespace volux\Dom;
 
-use volux\Dom\Doc;
+use volux\Dom\Document;
 /**
  * Class Cdata
  * @package volux\Dom
@@ -39,11 +39,11 @@ class Cdata extends \DOMCdataSection
      */
     public function isEmpty()
     {
-        return (Doc::NAME_NOT_MATCHED === $this->name()) or ('' === $this->nodeValue);
+        return (Document::NAME_NOT_MATCHED === $this->name()) or ('' === $this->nodeValue);
     }
 
     /**
-     * @return Doc|Html|Table|Form
+     * @return Document|Html|Table|Form
      */
     public function doc()
     {

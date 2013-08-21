@@ -6,7 +6,7 @@ class DomHtmlTest extends \PHPUnit_Framework_TestCase
 {
 
     /**
-     * @var \volux\Dom\Doc
+     * @var Dom\Document
      */
     private $dom;
     private $text = 'Hello Foo';

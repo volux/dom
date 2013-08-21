@@ -6,13 +6,13 @@
  */
 namespace volux\Dom;
 
-use volux\Dom\Doc;
+use volux\Dom\Document;
 /**
  * Class Table
  * @package volux\Dom
  * @author  Andrey Skulov <andrey.skulov@gmail.com>
  */
-class Table extends Doc
+class Table extends Document
 {
     const
         ELEMENT_CLASS = '\volux\Dom\Tag',
@@ -48,7 +48,7 @@ class Table extends Doc
     /**
      * @param array $head
      *
-     * @return $this|Table|Doc
+     * @return $this|Table|Document
      */
     public function head(array $head)
     {
@@ -62,7 +62,7 @@ class Table extends Doc
     /**
      * @param array $body
      *
-     * @return $this|Table|Doc
+     * @return $this|Table|Document
      */
     public function body(array $body)
     {
