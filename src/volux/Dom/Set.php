@@ -61,7 +61,7 @@ class Set extends \ArrayIterator implements \RecursiveIterator
      */
     public function getChildren()
     {
-        return new self($this->current()->childNodes, $this->doc());
+        return new self($this->current()->childNodes, $this->ownerDocument);
     }
 
     /**
@@ -246,7 +246,7 @@ class Set extends \ArrayIterator implements \RecursiveIterator
                         }
                     }
                 }
-        return new self($nodeset, $this->doc());
+        return new self($nodeset, $this->ownerDocument);
     }
 
     /**
@@ -307,7 +307,7 @@ class Set extends \ArrayIterator implements \RecursiveIterator
             }
         }
         if ($newSet) {
-            return new self($newSet, $this->doc());
+            return new self($newSet, $this->ownerDocument);
         }
         return $this;
     }
