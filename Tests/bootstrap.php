@@ -2,7 +2,7 @@
 function loader($className)
 {
     $paths = array(
-        'tests' => '..'.DIRECTORY_SEPARATOR.'tests',
+        'tests' => '..'.DIRECTORY_SEPARATOR.'Tests',
         'volux' => '..'.DIRECTORY_SEPARATOR.'src'.DIRECTORY_SEPARATOR.'volux',
     );
     $find = function($path) use ($paths) {
