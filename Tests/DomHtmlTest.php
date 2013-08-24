@@ -1,19 +1,20 @@
 <?php
 namespace tests;
-use \volux\Dom;
+
+use volux\Dom\Html;
 
 class DomHtmlTest extends \PHPUnit_Framework_TestCase
 {
 
     /**
-     * @var Dom\Document
+     * @var Html
      */
     private $dom;
     private $text = 'Hello Foo';
 
     public function setUp()
     {
-        $this->dom = new Dom\Html();
+        $this->dom = new Html();
         $this->dom->body()->append('<div id="test" class="content">'.$this->text.'</div>');
     }
 
