@@ -1,9 +1,10 @@
 <?php
 function loader($className)
 {
+    $dir = '/home/travis/build/volux/dom/';
     $paths = array(
-        'tests' => '..'.DIRECTORY_SEPARATOR.'Tests',
-        'volux' => '..'.DIRECTORY_SEPARATOR.'src'.DIRECTORY_SEPARATOR.'volux',
+        'tests' => $dir.'Tests',
+        'volux' => $dir.'src/volux',
     );
     $find = function($path) use ($paths) {
         if (isset($paths[$path])) {
@@ -12,7 +13,7 @@ function loader($className)
         return '.';
     };
     $path = explode('\\', str_replace('_', '\\', $className));
-    $file = $find(array_shift($path)).DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, $path).'.php';
+    $file = $find(array_shift($path)).'/'.implode('/', $path).'.php';
     var_dump($file);
     if (is_file($file)) {
         require $file;
