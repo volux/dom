@@ -5,8 +5,6 @@
  * @link http://github.com/volux/dom
  */
 namespace volux\Dom;
-
-use volux\Dom\Document;
 /**
  * Class Text
  * @package volux\Dom

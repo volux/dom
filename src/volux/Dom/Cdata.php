@@ -6,7 +6,7 @@
  */
 namespace volux\Dom;
 
-use volux\Dom\Document;
+use volux\Dom;
 /**
  * Class Cdata
  * @package volux\Dom

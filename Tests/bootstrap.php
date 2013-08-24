@@ -2,17 +2,18 @@
 function loader($className)
 {
     $paths = array(
-        'tests' => 'tests',
-        'volux' => 'src'.DIRECTORY_SEPARATOR.'volux',
+        'tests' => '..'.DIRECTORY_SEPARATOR.'tests',
+        'volux' => '..'.DIRECTORY_SEPARATOR.'src'.DIRECTORY_SEPARATOR.'volux',
     );
     $find = function($path) use ($paths) {
         if (isset($paths[$path])) {
             return $paths[$path];
         }
-        return '';
+        return '.';
     };
     $path = explode('\\', str_replace('_', '\\', $className));
-    $file = $find(array_shift($path)).DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, $path).'.php';
+    $file = realpath($find(array_shift($path))).DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, $path).'.php';
+    #var_dump($file);
     if (is_file($file)) {
         require $file;
     }
