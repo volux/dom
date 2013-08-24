@@ -12,7 +12,7 @@ function loader($className)
         return '.';
     };
     $path = explode('\\', str_replace('_', '\\', $className));
-    $file = realpath($find(array_shift($path))).DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, $path).'.php';
+    $file = $find(array_shift($path)).DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, $path).'.php';
     var_dump($file);
     if (is_file($file)) {
         require $file;
