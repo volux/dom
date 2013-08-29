@@ -342,12 +342,12 @@ class Document extends \DOMDocument
      */
     public function createElement($name, $value = null)
     {
-        if (preg_match('/<.*?>/im', $name) or preg_match('/&.*?;/im', $name)) {
+        if (preg_match('/^\w+$/im', $name)) {
+            $node = parent::createElement($name);
+        } else {
             if (!$this->createFragment($name, $node)) {
                 $node = $this->createText($name);
             }
-        } else {
-            $node = parent::createElement($name);
         }
         if (!is_null($value)) {
             $node->nodeValue = (string)$value;
