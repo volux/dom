@@ -14,6 +14,9 @@ use volux\Dom;
  */
 class Cdata extends \DOMCdataSection
 {
+    /** @var Document|Html|Table|Form */
+    public $ownerDocument;
+
     /**
      * @param string $expr css selector
      *
@@ -21,7 +24,7 @@ class Cdata extends \DOMCdataSection
      */
     public function is($expr)
     {
-        return !$this->doc()->find(array($expr, $this->getNodePath()))->isEmpty();
+        return !$this->ownerDocument->find(array($this->getNodePath(), $expr))->isEmpty();
     }
 
     /**
@@ -39,7 +42,15 @@ class Cdata extends \DOMCdataSection
      */
     public function isEmpty()
     {
-        return (Document::NAME_NOT_MATCHED === $this->name()) or ('' === $this->nodeValue);
+        return (Document::NAME_NOT_MATCHED === $this->name());
+    }
+
+    /**
+     * @return bool
+     */
+    public function isClean()
+    {
+        return ('' === $this->nodeValue);
     }
 
     /**
@@ -55,7 +66,13 @@ class Cdata extends \DOMCdataSection
      */
     public function parent()
     {
-        return $this->parentNode;
+        if ($this->parentNode instanceof \DOMNode) {
+            return $this->parentNode;
+        }
+        $this->ownerDocument->debug($this);
+        $parent = $this->ownerDocument->createElement('fix_parent');
+        $parent->appendChild($this);
+        return $parent;
     }
 
     /**
@@ -63,7 +80,7 @@ class Cdata extends \DOMCdataSection
      */
     public function end()
     {
-        return $this->doc()->context();
+        return $this->ownerDocument->context();
     }
 
     /**
@@ -81,7 +98,7 @@ class Cdata extends \DOMCdataSection
      */
     public function remove()
     {
-        return $this->parentNode->removeChild($this);
+        return $this->parent()->removeChild($this);
     }
 
     /**
@@ -96,7 +113,7 @@ class Cdata extends \DOMCdataSection
         if (is_null($context)) {
             $context = $this;
         }
-        return $this->doc()->find($expr, $index, $context);
+        return $this->ownerDocument->find($expr, $index, $context);
     }
 
     /**
@@ -117,12 +134,12 @@ class Cdata extends \DOMCdataSection
     public function position($to = null)
     {
         if (is_null($to)) {
-            return $this->find(array('', 'preceding-sibling::*'))->count() + 1;
+            return $this->find(array('preceding-sibling::', '*'))->count() + 1;
         }
         if ($this->siblings()->count() < $to) {
             return $this;
         }
-        $this->siblings($to+1)->before($this);
+        $this->siblings($to + 1)->before($this);
         return $this;
     }
 
@@ -132,7 +149,7 @@ class Cdata extends \DOMCdataSection
      *
      * @return $this|Cdata|string
      */
-    public function text($newText = null, $replace = false)
+    public function text($newText = null, $replace = true)
     {
         if (!is_null($newText)) {
             if ($replace) {
@@ -171,7 +188,11 @@ class Cdata extends \DOMCdataSection
      */
     public function after($element)
     {
-        return $this->parent()->after($element);
+        $next = $this->nextSibling;
+        if (!$next) {
+            return $this->parent()->appendChild($this->ownerDocument->importNode($this->ownerDocument->check($element)));
+        }
+        return $this->parent()->insertBefore($this->ownerDocument->importNode($this->ownerDocument->check($element)), $next);
     }
 
     /**
@@ -181,7 +202,7 @@ class Cdata extends \DOMCdataSection
      */
     public function before($element)
     {
-        return $this->parent()->before($element);
+        return $this->parent()->insertBefore($this->ownerDocument->importNode($this->ownerDocument->check($element)), $this);
     }
 
     /**
@@ -204,14 +225,22 @@ class Cdata extends \DOMCdataSection
      */
     public function wrap($wrapper)
     {
-        if (is_string($wrapper)) {
-            $wrapper = $this->doc()->createElement($wrapper);
-        }
-        $parent = $this->parentNode;
-        $wrapper = $parent->appendChild($wrapper);
+        $parent = $this->parent();
+        $wrapper = $parent->append($wrapper);
         $wrapper->appendChild($this->cloneNode(true));
         $parent->replaceChild($wrapper, $this);
         return $wrapper;
+    }
+
+    /**
+     * @param null|string $charList
+     *
+     * @return $this
+     */
+    public function trim($charList = null)
+    {
+        $this->nodeValue = trim($this->nodeValue, $charList);
+        return $this;
     }
 
     /**

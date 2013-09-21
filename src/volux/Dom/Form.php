@@ -5,6 +5,8 @@
  * @link http://github.com/volux/dom
  */
 namespace volux\Dom;
+
+use volux\Dom;
 /**
  * Class Form
  * @package volux\Dom

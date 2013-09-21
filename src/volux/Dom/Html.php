@@ -5,6 +5,8 @@
  * @link http://github.com/volux/dom
  */
 namespace volux\Dom;
+
+use volux\Dom;
 /**
  * Class Html
  * @package volux\Dom
@@ -44,27 +46,27 @@ class Html extends Document
     }
 
     /**
-     * @param null|string $ns
-     * @param string      $qualifiedName
-     * @param string      $docType
-     *
-     * @return \DOMDocument
-     */
-    public function implementation($ns = null, $qualifiedName = 'html', $docType = 'html')
-    {
-        return parent::implementation(null, $qualifiedName, $docType);
-    }
-
-    /**
      * @param string $version
      * @param string $encoding
      *
-     * @return Html
+     * @return Document|Html
      */
     public static function doc($version = self::VERSION, $encoding = self::ENCODING)
     {
         $html = new self($version, $encoding);
         return $html;
+    }
+
+    /**
+     * @return $this|Document|Html
+     */
+    protected function fixHead()
+    {
+        $this->head = $this->root()->find('head', 0);
+        if (self::NAME_NOT_MATCHED == $this->head->textContent) {
+            $this->head = $this->root()->prepend('head')->next()->remove();
+        }
+        return $this;
     }
 
     /**
@@ -76,36 +78,29 @@ class Html extends Document
     {
         $html = self::doc();
         $html->removeChild($html->documentElement);
-        $result = $this->createDomFromArray($array, $html);
-        if ($result instanceof Html) {
-            $result->head = $result->root()->find('head', 0);
-            $result->body = $result->root()->find('body', 0);
+        $doc = $this->createDomFromArray($array, $html);
+        if ($doc instanceof Html) {
+            $doc->body = $doc->fixHead()->root()->find('body', 0);
         }
-        return $result;
+        return $doc;
     }
 
     /**
      * @param null $htmlString
-     * @param bool $normalize output doctype defined document
      * @param bool $asXml
      *
      * @return Html|string
      */
-    public function html($htmlString = null, $normalize = false, $asXml = false)
+    public function html($htmlString = null, $asXml = false)
     {
         if (!is_null($htmlString)) {
             $this->loadHTML($htmlString);
-            if ($normalize) {
-                $this->normalizeDocument();
-            }
-            $this->head = $this->root()->find('head', 0);
-            $this->body = $this->root()->find('body', 0);
+            $this->body = $this->fixHead()->root()->find('body', 0);
             return $this;
         }
-
         if ($this->ajax->childNodes->length) {
 
-            $this->scripts->children()->appendTo($this->ajax);
+            $this->ajax->append($this->scripts->children());
 
             $this->documentElement->appendChild($this->importNode($this->ajax, true));
 
@@ -115,27 +110,8 @@ class Html extends Document
             return $this->saveHTML($this->ajax);
         }
 
-        $this->scripts->children()->appendTo($this->body);
+        $this->body->append($this->scripts->children());
 
-        if ($normalize) {
-
-            $doc = $this->implementation();
-
-            foreach ($this->documentElement->childNodes as $child) {
-                /** @var $child Tag|Field */
-                $doc->documentElement->appendChild($doc->importNode($child, true));
-            }
-            foreach ($this->documentElement->attributes as $attr) {
-                /** @var $attr Attr */
-                $doc->documentElement->setAttribute($attr->name, $attr->value);
-            }
-            if ($asXml) {
-                return $doc->saveXML();
-#                    return substr($doc->saveXML(), strlen($this->headString())+1); /** :-/ */
-            }
-            return $doc->saveHTML();
-        }
-        /* or easy way: */
         if ($asXml) {
             return self::HEAD_HTML.PHP_EOL.$this->saveXML($this->documentElement);
         }
@@ -151,13 +127,8 @@ class Html extends Document
      */
     public function load($source, $options = LIBXML_NOCDATA, &$result = false)
     {
-        if (is_file($source)) {
-            $source = file_get_contents($source, FILE_USE_INCLUDE_PATH);
-        }
-        if ($source) {
-            $this->html($source);
-        }
-        return $this;
+        $file = new File($source);
+        return $this->html($file->getContents());
     }
 
     /**
@@ -204,7 +175,7 @@ class Html extends Document
      *
      * @return $this|Html
      */
-    public function title($titleText)
+    public function title($titleText = '')
     {
         $title = $this->findByTag('title');
         if ($title->isEmpty()) {
@@ -218,12 +189,25 @@ class Html extends Document
     /**
      * @param string $uri
      * @param string $type
+     * @param bool|string $media
      *
      * @return $this|Html
      */
-    public function stylesheet($uri, $type = 'stylesheet')
+    public function stylesheet($uri, $type = 'stylesheet', $media = false)
     {
-        $this->head->append('link')->attr(array('href' => $uri, 'rel' => 'stylesheet'));
+        $this->head->append('link')->attr(array('href' => $uri, 'rel' => 'stylesheet', 'media' => $media));
+        return $this;
+    }
+
+    /**
+     * @param string $css
+     * @param bool $media
+     *
+     * @return $this|Html
+     */
+    public function style($css, $media = false)
+    {
+        $this->head->append('style')->attr('media', $media)->text("\n".$css."\n");
         return $this;
     }
 

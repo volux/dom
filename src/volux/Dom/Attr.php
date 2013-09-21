@@ -6,6 +6,7 @@
  */
 namespace volux\Dom;
 
+use volux\Dom;
 /**
  * Class Attr
  * @package volux\Dom
@@ -35,7 +36,15 @@ class Attr extends \DOMAttr
      */
     public function isEmpty()
     {
-        return (Document::NAME_NOT_MATCHED === $this->nodeName) or ($this->nodeValue === '');
+        return (Document::NAME_NOT_MATCHED === $this->localName);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isClean()
+    {
+        return ('' === $this->nodeValue);
     }
 
     /**
@@ -80,9 +89,12 @@ class Attr extends \DOMAttr
      *
      * @return Attr|string
      */
-    public function text($newText = null, $replace = false)
+    public function text($newText = null, $replace = true)
     {
         if (!is_null($newText)) {
+            if (false === $newText) {
+                return $this->remove();
+            }
             if ($replace) {
                 $this->nodeValue = '';
             }
@@ -90,6 +102,27 @@ class Attr extends \DOMAttr
             return $this;
         }
         return $this->nodeValue;
+    }
+
+    /**
+     * @param $text
+     *
+     * @return string|Attr
+     */
+    public function append($text)
+    {
+        return $this->text($text, false);
+    }
+
+    /**
+     * @param null|string $charList
+     *
+     * @return $this
+     */
+    public function trim($charList = null)
+    {
+        $this->nodeValue = trim($this->nodeValue, $charList);
+        return $this;
     }
 
     /**

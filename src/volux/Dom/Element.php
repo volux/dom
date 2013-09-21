@@ -5,6 +5,8 @@
  * @link http://github.com/volux/dom
  */
 namespace volux\Dom;
+
+use volux\Dom;
 /**
  * Class Element
  * @package volux\Dom
@@ -12,6 +14,9 @@ namespace volux\Dom;
  */
 class Element extends \DOMElement
 {
+    /** @var Document|Html|Table|Form */
+    public $ownerDocument;
+
     /**
      * @param null|string $xml
      *
@@ -41,7 +46,7 @@ class Element extends \DOMElement
      */
     public function is($expr)
     {
-        return !$this->doc()->find(array($expr, $this->getNodePath()))->isEmpty();
+        return !$this->ownerDocument->find(array($this->getNodePath(), $expr))->isEmpty();
     }
 
     /**
@@ -63,50 +68,49 @@ class Element extends \DOMElement
     }
 
     /**
+     * @todo override appendChild() with importNode()
      * @param string|Element|Tag|Field $child
      *
      * @return Element|Tag|Field
      */
     public function append($child)
     {
-        if (is_string($child)) {
-            $child = $this->doc()->createElement($child);
+        $child = $this->ownerDocument->check($child);
+        if ($child instanceof Set) {
+            foreach ($child as $node) {
+                $this->appendChild($this->ownerDocument->importNode($node));
+            }
+            return $this;
         }
-        if ($child instanceof Document) {
-            $child = $child->documentElement;
-        }
-        return $this->appendChild($this->importNode($child));
+        return $this->appendChild($this->ownerDocument->importNode($child));
     }
 
     /**
-     * @param string|Element|Tag|Field|\DOMNode $target css selector or Element
+     * @param string|Element|Tag|Field $target css selector or Element
      *
      * @return Element|Tag|Field
      */
-    public function appendTo($target)
+    public function appendTo(Element $target)
     {
-        static $find = array();
-        if (is_string($target)) {
-            if (!isset($find[$target])) {
-                $find[$target] = $this->doc()->find($target, 0);
-            }
-            $target = $find[$target];
-        }
-        /** @var $target Element|Tag|Field */
         return $target->appendChild($target->ownerDocument->importNode($this, true));
     }
 
     /**
+     * @todo override insertBefore() with importNode()
      * @param string|Element|Tag|Field $child
      *
      * @return Element|Tag|Field
      */
     public function prepend($child)
     {
-        if (is_string($child)) {
-            $child = $this->doc()->createElement($child);
+        $child = $this->ownerDocument->check($child);
+        if ($child instanceof Set) {
+            foreach ($child as $node) {
+                $this->insertBefore($this->ownerDocument->importNode($node), $this->firstChild);
+            }
+            return $this;
         }
-        return $this->insertBefore($this->importNode($child), $this->firstChild);
+        return $this->insertBefore($this->ownerDocument->importNode($child), $this->firstChild);
     }
 
     /**
@@ -116,41 +120,33 @@ class Element extends \DOMElement
      */
     public function prependTo($target)
     {
-        static $find = array();
-        if (is_string($target)) {
-            if (!isset($find[$target])) {
-                $find[$target] = $this->doc()->find($target, 0);
-            }
-            $target = $find[$target];
-        }
-        /** @var $target Element|Tag|Field */
         return $target->insertBefore($target->ownerDocument->importNode($this, true), $target->firstChild);
     }
 
     /**
      * @param null|string $selector
      *
-     * @return Element|Text|Tag|Field|Set
+     * @return Element|Text|Tag|Field
      */
     public function next($selector = null)
     {
         if (is_null($selector)) {
             return $this->nextSibling;
         }
-        return $this->find(array($selector, 'following-sibling::*'));
+        return $this->find(array('following-sibling::', $selector), 0);
     }
 
     /**
      * @param null|string $selector
      *
-     * @return Element|Text|Tag|Field|Set
+     * @return Element|Text|Tag|Field
      */
     public function prev($selector = null)
     {
         if (is_null($selector)) {
             return $this->previousSibling;
         }
-        return $this->find(array($selector, 'preceding-sibling::*'));
+        return $this->find(array('preceding-sibling::', $selector), 0);#->last();
     }
 
     /**
@@ -167,13 +163,10 @@ class Element extends \DOMElement
             }
             return $this;
         }
-        if (is_string($sibling)) {
-            $sibling = $this->doc()->createElement($sibling);
-        }
         if (!$next) {
-            return $this->parentNode->appendChild($this->importNode($sibling));
+            return $this->parent()->appendChild($this->ownerDocument->importNode($this->ownerDocument->check($sibling)));
         }
-        return $this->parentNode->insertBefore($this->importNode($sibling), $next);
+        return $this->parent()->insertBefore($this->ownerDocument->importNode($this->ownerDocument->check($sibling)), $next);
     }
 
     /**
@@ -190,20 +183,19 @@ class Element extends \DOMElement
             }
             return $this;
         }
-        if (is_string($sibling)) {
-            $sibling = $this->doc()->createElement($sibling);
-        }
-        return $this->parentNode->insertBefore($this->importNode($sibling), $this);
+        return $this->parent()->insertBefore($this->ownerDocument->importNode($this->ownerDocument->check($sibling)), $this);
     }
 
     /**
-     * @param \DOMNode|Element|Tag $newNode
+     * @param \DOMNode|Element|Tag|Field|string $newNode
+     * @param \DOMNode|Element|Tag|null|boolean $oldNode
      *
      * @return Element|Tag|Field
      */
-    public function replace(\DOMNode $newNode)
+    public function replace($newNode, &$oldNode = null)
     {
-        $this->parentNode->replaceChild($this->importNode($newNode), $this);
+        $newNode = $this->parent()->appendChild($this->ownerDocument->importNode($this->ownerDocument->check($newNode)));
+        $oldNode = $this->parent()->replaceChild($newNode, $this);
         return $newNode;
     }
 
@@ -215,7 +207,7 @@ class Element extends \DOMElement
      */
     public function xslt($xslFile, $xsltParameters = array())
     {
-        return $this->doc()->xslt($xslFile, $xsltParameters, $this);
+        return $this->ownerDocument->xslt($xslFile, $xsltParameters, $this);
     }
 
     /**
@@ -225,11 +217,8 @@ class Element extends \DOMElement
      */
     public function wrap($wrapper)
     {
-        if (is_string($wrapper)) {
-            $wrapper = $this->doc()->createElement($wrapper);
-        }
-        $parent = $this->parentNode;
-        $wrapper = $parent->appendChild($wrapper);
+        $parent = $this->parent();
+        $wrapper = $parent->append($wrapper);
         $wrapper->appendChild($this->cloneNode(true));
         $parent->replaceChild($wrapper, $this);
         return $wrapper;
@@ -243,7 +232,7 @@ class Element extends \DOMElement
     public function position($to = null)
     {
         if (is_null($to)) {
-            return $this->find(array('', 'preceding-sibling::*'))->count() + 1;
+            return $this->find(array('preceding-sibling::', '*'))->count() + 1;
         }
         if ($this->siblings()->count() < $to) {
             return $this;
@@ -287,7 +276,13 @@ class Element extends \DOMElement
      */
     public function parent()
     {
-        return $this->parentNode;
+        if ($this->parentNode instanceof \DOMNode) {
+            return $this->parentNode;
+        }
+        $this->ownerDocument->debug($this);
+        $parent = $this->ownerDocument->createElement('fix_parent');
+        $parent->appendChild($this);
+        return $parent;
     }
 
     /**
@@ -295,7 +290,7 @@ class Element extends \DOMElement
      */
     public function parents()
     {
-        return $this->find(array('', 'ancestor::*'));
+        return $this->find(array('ancestor::', '*'));
     }
 
     /**
@@ -305,7 +300,7 @@ class Element extends \DOMElement
      */
     public function closest($expr)
     {
-        return $this->find(array($expr, 'ancestor::*'))->last();
+        return $this->find(array('ancestor::', $expr))->last();
     }
 
     /**
@@ -321,12 +316,10 @@ class Element extends \DOMElement
         if ($this->isEmpty()) {
             return $this;
         }
-        $path = $this->doc()->createElement('path');
-        $parents = $this->parents();
-        while ($parent = $parents->sequent()) {
-            $path->append($parent->copy(false));
-        }
-        $path->append($this->copy(false));
+        $path = $this->ownerDocument->createElement('path');
+        $this->parents()->andSelf()->each(function(Element $element) use (&$path) {
+            $path->append($element->copy(false));
+        });
         return $path;
     }
 
@@ -335,7 +328,7 @@ class Element extends \DOMElement
      */
     public function end()
     {
-        return $this->doc()->context();
+        return $this->ownerDocument->context();
     }
 
     /**
@@ -343,7 +336,8 @@ class Element extends \DOMElement
      */
     public function remove()
     {
-        return $this->parentNode->removeChild($this);
+        $parent = $this->parent();
+        return $parent->removeChild($this);
     }
 
     /**
@@ -354,12 +348,28 @@ class Element extends \DOMElement
     public function children($selector = null)
     {
         if (is_null($selector)) {
-            return $this->doc()->set($this->childNodes);
+            return $this->set($this->childNodes);
         }
         if (is_numeric($selector)) {
             return $this->childNodes->item((int)$selector);
         }
-        return $this->find(array($selector, 'child::*'));
+        return $this->find(array('child::', $selector));
+    }
+
+    /**
+     * @return Element|Tag|Text|Cdata|Comment|Field
+     */
+    public function firstChild()
+    {
+        return $this->firstChild;
+    }
+
+    /**
+     * @return Element|Tag|Text|Cdata|Comment|Field
+     */
+    public function lastChild()
+    {
+        return $this->lastChild;
     }
 
     /**
@@ -377,7 +387,7 @@ class Element extends \DOMElement
      */
     public function attributes()
     {
-        return $this->doc()->set($this->attributes);
+        return $this->set($this->attributes);
     }
 
     /**
@@ -386,7 +396,7 @@ class Element extends \DOMElement
      */
     public function clear()
     {
-        $this->children()->remove();
+        $this->nodeValue = '';
         return $this;
     }
 
@@ -398,6 +408,13 @@ class Element extends \DOMElement
      */
     public function attr($name, $value = null)
     {
+        if ($name instanceof Attr) {
+            $this->setAttributeNode($name);
+            if (Document::ID_ATTR === $name->name) {
+                $this->setIdAttributeNode($name, true);
+            }
+            return $this;
+        }
         if ($name instanceof Set) {
             foreach ($name as $a) {
                 /** @var $a Attr */
@@ -415,7 +432,7 @@ class Element extends \DOMElement
                 if (true === $value) {
                     $this->setAttribute($name, $name);
                 } else {
-                    $this->setAttribute($name, $value);
+                    $this->setAttribute($name, (string)$value);
                     if (Document::ID_ATTR === $name) {
                         $this->setIdAttribute($name, true);
                     }
@@ -430,7 +447,7 @@ class Element extends \DOMElement
         }
         $attr = $this->getAttributeNode($name);
         if (!$attr) {
-            $attr = $this->doc()->createAttr($name, null);
+            $attr = $this->ownerDocument->createAttr($name);
         }
         return $attr;
     }
@@ -459,6 +476,26 @@ class Element extends \DOMElement
     }
 
     /**
+     * @param string $classes separated with space
+     *
+     * @return Element|Tag|Field
+     */
+    public function addClass($classes)
+    {
+        return $this->attrItems(Document::CLASS_ATTR, $classes, true);
+    }
+
+    /**
+     * @param bool|string $classes separated with space
+     *
+     * @return Element|Tag|Field
+     */
+    public function removeClass($classes = false)
+    {
+        return $this->attrItems(Document::CLASS_ATTR, $classes, false);
+    }
+
+    /**
      * @param null|string $name
      *
      * @return string|Element|Tag|Field
@@ -468,32 +505,34 @@ class Element extends \DOMElement
         if (!empty($name)) {
             return $this->rename($name);
         }
-        return $this->nodeName;
+        return $this->localName;
     }
 
     /**
      * @param string $name
-     * @param bool   $native
      * @param string $ns
+     * @param bool   $native
      *
      * @return $this|Element|Tag|Field
      */
-    public function rename($name, $native = true, $ns = '')
+    public function rename($name, $ns = '', $native = false)
     {
         if (!empty($name)) {
             if ($native) {
-                $this->doc()->renameNode($this, $ns, $name);
+                /** not implement yet */
+                $this->ownerDocument->renameNode($this, $ns, $name);
                 return $this;
             }
             $name = (string)$name;
+
             $old = $this->copy();
-            $new = $this->doc()->createElement($name);
+            $new = $this->ownerDocument->createElement($name);
             $new->attr($old->attributes());
             $children = $old->children();
             foreach ($children as $child) {
                 $new->append($child);
             }
-            $this->parentNode->replaceChild($new, $this);
+            $this->parent()->replaceChild($new, $this);
             return $new;
         }
         return $this;
@@ -513,19 +552,50 @@ class Element extends \DOMElement
      * @param null|string $newText
      * @param bool $replace
      *
-     * @return $this|Element|Tag|Field|Set
+     * @return $this|Element|Tag|Field|Set|Text
      */
-    public function text($newText = null, $replace = false)
+    public function text($newText = null, $replace = true)
     {
         if (!is_null($newText)) {
-            $newTextNode = $this->doc()->createText($newText);
             if ($replace) {
-                $this->clear();
+                $this->nodeValue = '';
+                if ($newText instanceof Set) {
+                    foreach ($newText as $node) {
+                        $this->nodeValue.= $node->nodeValue;;
+                    }
+                    return $this;
+                }
+                if ($newText instanceof \DOMNode) {
+                    $this->nodeValue = $newText->nodeValue;
+                    return $this;
+                }
+                $this->nodeValue = (string)$newText;
+                return $this;
+            }
+            if ($newText instanceof Set) {
+                foreach ($newText as $entry) {
+                    /** @var $entry Element|Attr|Text|Cdata|Comment */
+                    $this->text($entry->text());
+                }
+                return $this;
+            }
+            if ($newText instanceof \DOMNode) {
+                $newTextNode = $this->ownerDocument->createText($newText->nodeValue);
+            } else {
+                $newTextNode = $this->ownerDocument->createText($newText);
             }
             $this->appendChild($newTextNode);
             return $this;
         }
-        return $this->find(array('/text()', '.'));
+        return $this->nodeValue;
+    }
+
+    /**
+     * @return Set|Text
+     */
+    public function content()
+    {
+        return $this->find(array('.', '/text()'));
     }
 
     /**
@@ -539,28 +609,54 @@ class Element extends \DOMElement
     {
         if (is_null($context)) {
             $context = $this;
+            if (!is_array($expr) and preg_match(Document::MATCH_ONCE_WORD, $expr)) {
+                /**
+                 * @todo test speed
+                 */
+                return $context->getElementsByTagName($expr, $index);
+            }
         }
-        return $this->doc()->find($expr, $index, $context);
+        return $this->ownerDocument->find($expr, $index, $context);
+    }
+
+    /**
+     * @param $expr
+     *
+     * @return mixed
+     */
+    public function evaluate($expr)
+    {
+        return $this->ownerDocument->evaluate($expr, $this);
+    }
+
+    /**
+     * @param string $name
+     * @param int    $index
+     *
+     * @return Set
+     */
+    public function getElementsByTagName($name, $index = null)
+    {
+        if (is_null($index)) {
+            return $this->set(parent::getElementsByTagName($name));
+        }
+        return $this->ownerDocument->notEmpty($this->set(parent::getElementsByTagName($name))->item($index), $name);
     }
 
     /**
      * @param string $source filename or uri
      * @param callable|null $callback
      *
-     * @return $this|Element|Tag|Field
+     * @return Element|Tag|Field
      */
     public function load($source, $callback = null)
     {
-        if (is_file($source)) {
-            $source = file_get_contents($source, FILE_USE_INCLUDE_PATH);
+        $file = new File($source);
+        $appended = $this->append($file);
+        if (is_callable($callback)) {
+            $callback($appended);
         }
-        if ($source) {
-            $appended = $this->append($source);
-            if (is_callable($callback)) {
-                $callback($appended);
-            }
-        }
-        return $this;
+        return $appended;
     }
 
     /**
@@ -577,7 +673,7 @@ class Element extends \DOMElement
         if (empty($name)) {
             return $this;
         }
-        return $this->appendChild($this->doc()->createElement($name)->attr($attr)->text($text));
+        return $this->appendChild($this->ownerDocument->createElement($name)->attr($attr)->text($text));
     }
 
     /**
@@ -594,7 +690,7 @@ class Element extends \DOMElement
         if (empty($name)) {
             return $this;
         }
-        return $this->insertBefore($this->doc()->createElement($name)->attr($attr)->text($text), $this->firstChild);
+        return $this->insertBefore($this->ownerDocument->createElement($name)->attr($attr)->text($text), $this->firstChild);
     }
 
     /**
@@ -638,21 +734,25 @@ class Element extends \DOMElement
     }
 
     /**
-     * @param \DOMNode $newNode
+     * @param array|\DOMNamedNodeMap|\DOMNodeList $list
      *
-     * @return Element|Tag|Field
+     * @return Set
      */
-    protected function importNode($newNode)
+    public function set($list)
     {
-        return $this->doc()->importNode($newNode);
+        return new Set($list, $this->ownerDocument);
     }
 
+    public function in(Set $set)
+    {
+
+    }
     /**
      * @return array
      */
     public function toArray()
     {
-        return $this->doc()->toArray($this);
+        return $this->ownerDocument->toArray($this);
     }
 
     /**

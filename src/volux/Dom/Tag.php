@@ -5,6 +5,8 @@
  * @link http://github.com/volux/dom
  */
 namespace volux\Dom;
+
+use volux\Dom;
 /**
  * Class Tag
  * @package volux\Dom
@@ -12,7 +14,6 @@ namespace volux\Dom;
  */
 class Tag extends Element
 {
-    const CLASS_ATTR = 'class';
 
     /**
      * @param string $name data key
@@ -56,26 +57,6 @@ class Tag extends Element
             return $this->attr('id')->text();
         }
         return $this->attr('id', $id);
-    }
-
-    /**
-     * @param string $classes separated with space
-     *
-     * @return Element|Tag|Field
-     */
-    public function addClass($classes)
-    {
-        return $this->attrItems(self::CLASS_ATTR, $classes, true);
-    }
-
-    /**
-     * @param bool|string $classes separated with space
-     *
-     * @return Element|Tag|Field
-     */
-    public function removeClass($classes = false)
-    {
-        return $this->attrItems(self::CLASS_ATTR, $classes, false);
     }
 
     /**

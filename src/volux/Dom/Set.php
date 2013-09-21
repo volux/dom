@@ -5,6 +5,8 @@
  * @link http://github.com/volux/dom
  */
 namespace volux\Dom;
+
+use volux\Dom;
 /**
  * Class Set
  * @package volux\Dom
@@ -13,25 +15,37 @@ namespace volux\Dom;
 class Set extends \ArrayIterator implements \RecursiveIterator
 {
     /**
-     * @var Document|Html|Form
+     * @var Document|Html|Table|Form
      */
     protected $ownerDocument;
     /**
-     * @param \DOMNodelist|\DOMNamedNodeMap|Set|array $nodeList
-     * @param Document|Html|Form $dom
+     * @param \DOMNodelist|\DOMNamedNodeMap|Set|array $list
+     * @param Document|Html|Table|Form $dom
      */
-    public function __construct($nodeList, Document &$dom)
+    public function __construct($list, Document $dom)
     {
+        parent::__construct();
         $this->ownerDocument = $dom;
-        $nodes = array();
-        foreach ($nodeList as $node) {
-            $nodes[] = $node;
+        foreach ($list as $entry) {
+            $this->append($entry);
         }
-        parent::__construct($nodes);
     }
 
     /**
-     * @return Document|Html|Form
+     * @param mixed $value
+     *
+     * @return $this
+     */
+    public function append($value) {
+        if (is_scalar($value)) {
+            $value = $this->ownerDocument->createText($value);
+        }
+        parent::append($value);
+        return $this;
+    }
+
+    /**
+     * @return Document|Form|Html|Table
      */
     public function doc()
     {
@@ -67,28 +81,29 @@ class Set extends \ArrayIterator implements \RecursiveIterator
      */
     public function end()
     {
-        return $this->doc()->context();
+        return $this->ownerDocument->context();
     }
 
     /**
-     * @param $callable
+     * @param \Closure $closure
      *
-     * @return $this|Set
+     * @return Set
      */
-    public function each($callable)
+    public function each(\Closure $closure)
     {
-        $index = 0;
-        foreach ($this as $node) {
-            $callable($node, $index++);
+        foreach ($this as $index=>$node) {
+            if (false === $closure($node, $index)) {
+                return $this;
+            }
         }
         return $this;
     }
 
     /**
-     * <code> while ($node = $set->sequent()) { $node } </code>
+     * <code> while ($node = $set->sequence()) { $node } </code>
      * @return Attr|Element|Tag|Field|Text|Cdata|Comment
      */
-    public function sequent()
+    public function sequence()
     {
         $this->next();
         if ($this->valid()) {
@@ -105,10 +120,27 @@ class Set extends \ArrayIterator implements \RecursiveIterator
      */
     public function eq($offset)
     {
-        if ($this->count() < $offset) {
-            return $this->doc()->notEmpty(false, '=Set::eq()');
+        $count = $this->count();
+        if ($offset < 0) {
+            $offset = $count - $offset;
         }
-        return $this->offsetGet($offset);
+        if ($count < $offset) {
+            $offset = $count - 1;
+        }
+        if ($this->offsetExists($offset)) {
+            return $this->offsetGet($offset);
+        }
+        return $this->ownerDocument->notEmpty(false, 'Set::eq('.$offset.')');
+    }
+
+    /**
+     * @param $offset
+     *
+     * @return Attr|Cdata|Comment|Element|Field|Tag|Text
+     */
+    public function item($offset)
+    {
+        return $this->eq($offset);
     }
 
     /**
@@ -117,7 +149,7 @@ class Set extends \ArrayIterator implements \RecursiveIterator
     public function first()
     {
         if ($this->count() == 0) {
-            return $this->doc()->notEmpty(false, '=Set::first()');
+            return $this->ownerDocument->notEmpty(false, 'Set::first()');
         }
         return $this->offsetGet(0);
     }
@@ -128,10 +160,19 @@ class Set extends \ArrayIterator implements \RecursiveIterator
     public function last()
     {
         if ($this->count() == 0) {
-            return $this->doc()->notEmpty(false, '=Set::last()');
+            return $this->ownerDocument->notEmpty(false, 'Set::last()');
         }
         $offset = $this->count()-1;
         return $this->offsetGet($offset);
+    }
+
+    /**
+     * @return $this|Set
+     */
+    public function andSelf()
+    {
+        $this->append($this->ownerDocument->context());
+        return $this;
     }
 
     /**
@@ -162,22 +203,6 @@ class Set extends \ArrayIterator implements \RecursiveIterator
             $this->offsetGet($key)->remove();
             $this->offsetUnset($key);
             $this->rewind();
-        }
-        return $this;
-    }
-
-    /**
-     * @param string|Element|Tag|Field $target
-     *
-     * @return $this|Set
-     */
-    public function appendTo(&$target)
-    {
-        if (is_string($target)) {
-            $target = $this->doc()->createElement($target);
-        }
-        foreach ($this as $node) {
-            $target->append($node);
         }
         return $this;
     }
@@ -251,12 +276,12 @@ class Set extends \ArrayIterator implements \RecursiveIterator
      * also used like $this->map('attr', 'id')
      *
      * @param string $method
-     * @param string $key
      * @param null $arg
+     * @param string $key
      *
      * @return \ArrayIterator
      */
-    public function map($method = 'text', $key = 'getNodePath', $arg = null)
+    public function map($method = 'text', $arg = null, $key = 'getNodePath')
     {
         $array = array();
         foreach ($this as $node) {
@@ -264,6 +289,19 @@ class Set extends \ArrayIterator implements \RecursiveIterator
             $array[$node->$key()] = $node->$method($arg);
         }
         return new \ArrayIterator($array);
+    }
+
+    /**
+     * @param callable $fn who must return boolean true to continue call with $iterator->current()
+     * @param array    $args
+     * @param int      $count
+     *
+     * @return $this
+     */
+    public function apply(\Closure $fn, array $args = array(), &$count = 0)
+    {
+        $count = iterator_apply($this, $fn, array_merge(array($this), $args));
+        return $this;
     }
 
     /**
@@ -275,7 +313,7 @@ class Set extends \ArrayIterator implements \RecursiveIterator
     public function xslt($xslFile, $xsltParameters = array())
     {
         foreach ($this as $node) {
-            $this->doc()->xslt($xslFile, $xsltParameters, $node);
+            $this->ownerDocument->xslt($xslFile, $xsltParameters, $node);
         }
         return $this;
     }
@@ -295,7 +333,7 @@ class Set extends \ArrayIterator implements \RecursiveIterator
             if (method_exists($element, $method)) {
                 /** @var $element Attr|Element|Tag|Field|Text|Cdata|Comment */
                 $result = call_user_func_array(array($element, $method), $args);
-                if ($result instanceof Set) {
+                if ($result instanceof self) {
                     foreach ($result as $item) {
                         $newSet[] = $item;
                     }
@@ -308,6 +346,12 @@ class Set extends \ArrayIterator implements \RecursiveIterator
             return new self($newSet, $this->ownerDocument);
         }
         return $this;
+    }
+
+    public function __get($property)
+    {
+        $entry = $this->first();
+        return $entry->$property;
     }
 
     /**

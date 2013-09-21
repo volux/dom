@@ -27,9 +27,9 @@ or copy ``src\volux`` to ``vendor`` directory and use your PRS-0 autoloader.
 
 ```php
 <?php
-use volux\Dom\Html;
+use volux\Dom;
 
-$htmlResult = new Html();
+$htmlResult = new Dom\Html();
 
 $htmlResult->title('Google News Test');
 
@@ -51,9 +51,9 @@ echo $htmlResult;
 ```php
 <?php
 
-use volux\Dom\Document;
+use volux\Dom;
 
-Document::doc()->load('example.xml')
+Dom\Document::doc()->load('example.xml')
     ->find('.content')->xslt('content.xsl')
         ->end()
     ->saveHTMLfile('transformed.html');
@@ -64,10 +64,9 @@ Document::doc()->load('example.xml')
 ### Build form example
 
 ```php
-use volux\Dom\Html;
-use volux\Dom\Form;
+use volux\Dom;
 
-$form = new Form();
+$form = new Dom\Form();
 $form
     ->fieldSet('Group 1')
         ->add()
@@ -106,7 +105,7 @@ $form
                 ->formMethod('post')
 ;
 
-$html = new Html();
+$html = new Dom\Html();
 $html
     ->root()->attr(array('lang' => 'en'));
 $html
@@ -126,9 +125,9 @@ echo $html;
 
 ```php
 <?php
-use volux\Dom\Html;
+use volux\Dom;
 
-$html = new Html();
+$html = new Dom\Html();
 $html
     ->root()->attr('lang', 'en');
 $html

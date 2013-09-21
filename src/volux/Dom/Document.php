@@ -5,7 +5,6 @@
  * @link http://github.com/volux/dom
  */
 namespace volux\Dom;
-
 /**
  * Class Document
  * @package volux\Dom
@@ -14,15 +13,18 @@ namespace volux\Dom;
 class Document extends \DOMDocument
 {
     const
-        NAME_NOT_MATCHED = 'not.matched',
+        NAME_NOT_MATCHED = 'not_matched',
         VERSION = '1.0',
         ENCODING = 'UTF-8',
         ELEMENT_CLASS = '\volux\Dom\Element',
         ATTR_CLASS = '\volux\Dom\Attr',
+        FRAGMENT_CLASS = '\volux\Dom\Fragment',
         TEXT_CLASS = '\volux\Dom\Text',
         CDATA_CLASS = '\volux\Dom\Cdata',
         COMMENT_CLASS = '\volux\Dom\Comment',
-        ID_ATTR = 'id'
+        ID_ATTR = 'id',
+        CLASS_ATTR = 'class',
+        MATCH_ONCE_WORD = '`^\w+$`'
     ;
 
     /**
@@ -33,12 +35,15 @@ class Document extends \DOMDocument
      * @var XPath
      */
     public $xPath;
+
+    /**
+     * @var bool|\Closure
+     */
+    public $debug = false;
     /**
      * @var Element|Tag|Field
      */
     protected $contextElement;
-
-    protected $ns;
 
     public function __construct($version = self::VERSION, $encoding = self::ENCODING)
     {
@@ -46,11 +51,16 @@ class Document extends \DOMDocument
 
         $this->registerClasses($this);
 
-        $this->preserveWhiteSpace = false;
+        $this->innerSetting();
+    }
+
+    protected function innerSetting()
+    {
+        $this->preserveWhiteSpace = true;
         $this->strictErrorChecking = false;
         $this->substituteEntities = true;
         $this->formatOutput = true;
-        $this->setXPath($this);
+        return $this;
     }
 
     /**
@@ -63,46 +73,21 @@ class Document extends \DOMDocument
         $doc->registerNodeClass('\DOMText', static::TEXT_CLASS);
         $doc->registerNodeClass('\DOMCdataSection', static::CDATA_CLASS);
         $doc->registerNodeClass('\DOMComment', static::COMMENT_CLASS);
+        #$doc->registerNodeClass('\DOMDocumentFragment', static::FRAGMENT_CLASS);
     }
 
     /**
-     * @param null $namespaceURI
-     * @param null $qualifiedName
-     * @param null $docType
+     * @param $source
      *
-     * @return \DOMDocument
+     * @return string
      */
-    public function implementation($namespaceURI = null, $qualifiedName = null, $docType = null)
+    public function convertEntities($source)
     {
-        $imp = new \DOMImplementation();
-        $doc = $imp->createDocument($namespaceURI, $qualifiedName, $imp->createDocumentType($docType));
-
-        $this->registerClasses($doc);
-
-        $doc->formatOutput = true;
-        $doc->preserveWhiteSpace = false;
-        $doc->substituteEntities = true;
-
-        return $doc;
+        return mb_convert_encoding((string)$source, 'HTML-ENTITIES');
     }
 
     /**
-     * @param Document $doc
-     *
-     * @return Document
-     */
-    protected function setXPath(Document $doc)
-    {
-        $doc->xPath = new XPath($doc);
-        if ($doc->namespaceURI) {
-            $doc->ns = $doc->lookupNamespaceUri($doc->namespaceURI);
-            $doc->xPath->registerNamespace('x', $doc->ns);
-        }
-        return $doc;
-    }
-
-    /**
-     * @param string   $source
+     * @param string|File $source
      * @param int|null $options
      * @param bool     $result
      *
@@ -110,13 +95,8 @@ class Document extends \DOMDocument
      */
     public function load($source, $options = LIBXML_NOCDATA, &$result = false)
     {
-        if (is_file($source)) {
-            $source = file_get_contents($source, FILE_USE_INCLUDE_PATH);
-        }
-        if ($source) {
-            return $this->loadXML($source, $options, $result);
-        }
-        return $this;
+        $file = new File($source);
+        return $this->loadXML($file->getContents(), $options, $result);
     }
 
     /**
@@ -128,10 +108,11 @@ class Document extends \DOMDocument
      */
     public function loadXML($source, $options = LIBXML_NOCDATA, &$result = false)
     {
-        $this->preserveWhiteSpace = false;
+        $this->innerSetting();
         $this->recover = true;
-        $result = parent::loadXML(mb_convert_encoding((string)$source, 'HTML-ENTITIES', $this->xmlEncoding), $options);
-        return $this->setXPath($this);
+        $result = parent::loadXML($this->convertEntities($source), $options);
+        $this->xPath = null;
+        return $this;
     }
 
     /**
@@ -141,14 +122,17 @@ class Document extends \DOMDocument
      */
     public function loadNsXML($source)
     {
-        $simpleXML = new \SimpleXMLElement($source);
-        $ns = $simpleXML->getDocNamespaces(true);
-        $this->appendChild($this->importNode(dom_import_simplexml($simpleXML), true));
+        $file = new File($source);
+        $xml = new \SimpleXMLElement($file->getContents());
+        $ns = $xml->getDocNamespaces(true);
+        $xml = dom_import_simplexml($xml);
         foreach ($ns as $prefix => $uri) {
-            $this->documentElement->removeAttributeNS($uri, $prefix);
+            $xml->removeAttributeNS($uri, $prefix);
         }
+        $this->append($xml)->rename($xml->localName);
         #$this->normalizeDocument();
-        return $this->setXPath($this);
+        $this->xPath = null;
+        return $this;
     }
 
     /**
@@ -160,10 +144,11 @@ class Document extends \DOMDocument
     public function loadHTML($source, &$result = false)
     {
         libxml_use_internal_errors(true); /* ??? */
-        $this->preserveWhiteSpace = false;
+        $this->innerSetting();
         $this->recover = true;
-        $result = parent::loadHTML(mb_convert_encoding((string)$source, 'HTML-ENTITIES', $this->xmlEncoding));
-        return $this->setXPath($this);
+        $result = parent::loadHTML($this->convertEntities($source));
+        $this->xPath = null;
+        return $this;
     }
 
     /**
@@ -174,13 +159,18 @@ class Document extends \DOMDocument
      */
     public function loadHTMLFile($filename, &$result = false)
     {
-        if (is_file($filename)) {
-            $source = file_get_contents($filename, FILE_USE_INCLUDE_PATH);
-            if ($source) {
-                return $this->loadHTML($source, $options);
-            }
-        }
-        return $this;
+        $file = new File($filename);
+        return $this->loadHTML($file->getContents(), $options);
+    }
+
+    /**
+     * @param \DOMNode $node
+     *
+     * @return string
+     */
+    public function saveHTML(\DOMNode $node = null)
+    {
+        return rawurldecode(parent::saveHTML($node));
     }
 
     /**
@@ -203,11 +193,14 @@ class Document extends \DOMDocument
     public function root($name = null)
     {
         if (!is_null($name)) {
-            if (!$this->documentElement) {
-                $this->appendChild($this->createElement($name));
+            if (is_null($this->documentElement)) {
+                $this->append($name);
             } else {
-                $this->documentElement->name($name);
+                $this->documentElement->rename($name);
             }
+        }
+        if (is_null($this->documentElement)) {
+            return $this->root('document');
         }
         return $this->documentElement;
     }
@@ -219,10 +212,10 @@ class Document extends \DOMDocument
      */
     public function append($child)
     {
-        if (is_string($child)) {
-            $child = $this->createElement($child);
+        if (!$this->documentElement) {
+            return $this->appendChild($this->importNode($this->check($child)));
         }
-        return $this->appendChild($this->importNode($child));
+        return $this->documentElement->appendChild($this->importNode($this->check($child)));
     }
 
     /**
@@ -235,22 +228,14 @@ class Document extends \DOMDocument
     }
 
     /**
-     * @param string|array $expr
-     * @param null $index
-     * @param null $context
-     *
-     * @return Element|Tag|Field|Set
+     * @return XPath
      */
-    public function find($expr, $index = null, $context = null)
+    public function xPath()
     {
-        if (is_null($context)) {
-            $context = $this->documentElement;
+        if (is_null($this->xPath)) {
+            $this->xPath = new XPath($this);
         }
-        $this->contextElement = $context;
-        if (is_null($index)) {
-            return $this->set($this->xPath->query($expr, $context));
-        }
-        return $this->notEmpty($this->xPath->query($expr, $context)->item($index), $expr);
+        return $this->xPath;
     }
 
     /**
@@ -263,20 +248,76 @@ class Document extends \DOMDocument
     {
         if (empty($node)) {
             $contextPath = $this->context()->getNodePath();
-            $this->contextElement->prepend($this->createComment(self::NAME_NOT_MATCHED . ' by "' . $contextPath . '/'. $expr . '"'));
-            $node = $this->createElement(self::NAME_NOT_MATCHED, $contextPath . $expr);
+            if (!is_array($expr)) {
+                $expr = $contextPath. '?' . $expr;
+            } else {
+                $expr = $contextPath. join('?', $expr);
+            }
+            $this->debug(self::NAME_NOT_MATCHED . ' ( ' . $expr . ' )');
+            $node = $this->createElement(self::NAME_NOT_MATCHED, $expr);
         }
         return $node;
     }
 
     /**
+     * @param      $expr
+     * @param null $context
+     *
+     * @return mixed
+     */
+    public function evaluate($expr, $context = null)
+    {
+        return $this->xPath()->evaluate($expr, $context);
+    }
+
+    /**
+     * @param string|array $expr
+     * @param null $index
+     * @param null $context
+     *
+     * @return Element|Tag|Field|Set
+     */
+    public function find($expr, $index = null, $context = null)
+    {
+        if (is_null($context)) {
+            $context = $this->root();
+            if (!is_array($expr) and preg_match(self::MATCH_ONCE_WORD, $expr)) {
+                /**
+                 * @todo test speed
+                 */
+                return $context->getElementsByTagName($expr, $index);
+            }
+        }
+        $this->contextElement = $context;
+        if (is_null($index)) {
+            return $this->xPath()->query($expr, $context);
+        }
+        return $this->notEmpty($this->xPath()->query($expr, $context)->item($index), $expr);
+    }
+
+    /**
      * @param string $name
+     * @param int $index
      *
      * @return Set
      */
-    public function findByTag($name)
+    public function findByTag($name, $index = null)
     {
-        return $this->set($this->getElementsByTagName($name));
+        return $this->getElementsByTagName($name, $index);
+    }
+
+    /**
+     * @param string $name
+     * @param int    $index
+     *
+     * @return Set
+     */
+    public function getElementsByTagName($name, $index = null)
+    {
+        if (is_null($index)) {
+            return $this->set(parent::getElementsByTagName($name));
+        }
+        return $this->notEmpty($this->set(parent::getElementsByTagName($name))->item($index), $name);
     }
 
     /**
@@ -288,9 +329,19 @@ class Document extends \DOMDocument
     public function findById($id, $internal = true)
     {
         if ($internal) {
-            return $this->notEmpty($this->getElementById($id), '#'.$id);
+            return $this->getElementById($id);
         }
-        return $this->find('#'.$id, $this, 0);
+        return $this->find('#'.$id, 0);
+    }
+
+    /**
+     * @param string $id
+     *
+     * @return \DOMElement|Element|Field|Tag
+     */
+    public function getElementById($id)
+    {
+        return $this->notEmpty(parent::getElementById($id), '#'.$id);
     }
 
     /**
@@ -335,22 +386,25 @@ class Document extends \DOMDocument
     }
 
     /**
-     * @param string $name node name or well formed xml fragment or text
+     * @param string|File $name node name or well formed xml fragment or text or File
      * @param null|string $value
      *
      * @return Element|Tag|Field
      */
     public function createElement($name, $value = null)
     {
-        if (preg_match('/^\w+$/im', $name)) {
+        if (preg_match(self::MATCH_ONCE_WORD, $name)) {
             $node = parent::createElement($name);
-        } else {
-            if (!$this->createFragment($name, $node)) {
-                $node = $this->createText($name);
+            if (!is_null($value)) {
+                $node->nodeValue = (string)$value;
             }
+            return $node;
         }
-        if (!is_null($value)) {
-            $node->nodeValue = (string)$value;
+        if (!$this->createFragment($name, $node)) {
+            $node = $this->createText($name);
+            if (!is_null($value)) {
+                $node->append($value);
+            }
         }
         return $node;
     }
@@ -363,6 +417,9 @@ class Document extends \DOMDocument
      */
     public function createFragment($xml, &$fragment)
     {
+        /** @var Fragment $fragment */
+        $fragment = $this->createDocumentFragment();
+
         $fix = self::doc()->loadHTML($xml)->find('body', 0);
 
         if ($xml{0} !== '<') {
@@ -373,9 +430,6 @@ class Document extends \DOMDocument
             } else {
                 $xml = (string)$fix;
             }
-
-        $fragment = $this->createDocumentFragment();
-
         return @$fragment->appendXML($xml);
     }
 
@@ -442,7 +496,7 @@ class Document extends \DOMDocument
      */
     public function importNode(\DOMNode $importedNode, $deep = true)
     {
-        if ($this === $importedNode->ownerDocument) {
+        if ($this == $importedNode->ownerDocument) {
             return $importedNode;
         }
         return $this->notEmpty(parent::importNode($importedNode, $deep));
@@ -568,4 +622,40 @@ class Document extends \DOMDocument
     {
         return $this->saveXML();
     }
+
+    /**
+     * @param $mixed
+     */
+    public function debug($mixed)
+    {
+        if ($this->debug) {
+            if (is_callable($this->debug)) {
+                call_user_func($this->debug, $mixed);
+            } else {
+                $this->context()->prepend($this->createComment(var_export($mixed, 1)));
+            }
+        }
+        return $mixed;
+    }
+
+    /**
+     * @todo resolve in check() Set or \DOMNodeList with importNode
+     * @param string|Element|Field|Tag|Document|Html|Table|Form|File $data
+     *
+     * @return Element|Field|Tag
+     */
+    public function check($data)
+    {
+        if ($data instanceof File) {
+            $data = $data->getContents();
+        }
+        if ($data instanceof self) {
+            $data = $data->documentElement;
+        }
+        if (is_string($data)) {
+            $data = $this->createElement($data);
+        }
+        return $data;
+    }
+
 }

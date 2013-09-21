@@ -5,6 +5,8 @@
  * @link http://github.com/volux/dom
  */
 namespace volux\Dom;
+
+use volux\Dom;
 /**
  * Class Xslt
  * @package volux\Dom
@@ -35,7 +37,7 @@ class Xslt extends Document
      * @param int|null $options
      * @param bool     $result
      *
-     * @return $this|Document
+     * @return $this|Document|Xslt
      */
     public function loadXML($source, $options = LIBXML_NOCDATA, &$result = false)
     {

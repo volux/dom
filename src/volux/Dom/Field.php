@@ -5,8 +5,10 @@
  * @link http://github.com/volux/dom
  */
 namespace volux\Dom;
+
+use volux\Dom;
 /**
- * Class Field
+ * Class Tag
  * @package volux\Dom
  * @author  Andrey Skulov <andrey.skulov@gmail.com>
  */
@@ -123,55 +125,6 @@ class Field extends Tag
     }
 
     /**
-     * @todo move it method to separate class helper Bootstrap
-     * @param string $prepend
-     * @param string $append
-     * @param string $type
-     *
-     * @return $this|Element|Field|Tag
-     */
-    public function buttons($prepend = '', $append = '', $type = 'button')
-    {
-        if ($this->isPointInput()) {
-            return $this;
-        }
-        $wrapper = $this->wrap('div');
-        if ($prepend) {
-            $wrapper->addClass('input-prepend');
-            $this->before('button')->attr('type', $type)->addClass('btn')->text($prepend);
-        }
-        if ($append) {
-            $wrapper->addClass('input-append');
-            $this->after('button')->attr('type', $type)->addClass('btn')->text($append);
-        }
-        return $this;
-    }
-
-    /**
-     * @todo move it method to separate class helper Bootstrap
-     * @param string $prepend
-     * @param string $append
-     *
-     * @return $this|Element|Field|Tag
-     */
-    public function marks($prepend = '', $append = '')
-    {
-        if ($this->isPointInput()) {
-            return $this;
-        }
-        $wrapper = $this->wrap('div');
-        if ($prepend) {
-            $wrapper->addClass('input-prepend');
-            $this->before('span')->addClass('add-on')->text($prepend);
-        }
-        if ($append) {
-            $wrapper->addClass('input-append');
-            $this->after('span')->addClass('add-on')->text($append);
-        }
-        return $this;
-    }
-
-    /**
      * @param string|bool $uri string or false
      *
      * @return $this|Element|Field|Tag
@@ -257,7 +210,7 @@ class Field extends Tag
     /**
      * @return bool
      */
-    protected function isPointInput()
+    public function isPointInput()
     {
         return ($this->attr('type') == 'radio' or $this->attr('type') == 'checkbox');
     }
