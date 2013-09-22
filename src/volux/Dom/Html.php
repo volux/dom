@@ -1,9 +1,9 @@
 <?php
 /**
- * volux\Dom
- *
- * @link http://github.com/volux/dom
- */
+* volux\Dom
+*
+* @link http://github.com/volux/dom
+*/
 namespace volux\Dom;
 
 use volux\Dom;
@@ -29,6 +29,8 @@ class Html extends Document
     /** @var Tag */
     protected $ajax;
 
+    /** @var  Html */
+    protected $container;
     /**
      * @param string $version
      * @param string $encoding
@@ -40,9 +42,11 @@ class Html extends Document
         $this->root('html');
         $this->head = $this->root()->append('head')->text(false);
         $this->body = $this->root()->append('body')->text(false);
-        $this->scripts = $this->createElement('scripts');
 
-        $this->ajax = $this->createElement(self::AJAX_ROOT);
+        $this->container = new Document();
+        $this->container->root('keep');
+        $this->scripts = $this->container->root()->append('scripts');
+        $this->ajax = $this->container->root()->append(self::AJAX_ROOT);
     }
 
     /**
@@ -80,7 +84,7 @@ class Html extends Document
         $html->removeChild($html->documentElement);
         $doc = $this->createDomFromArray($array, $html);
         if ($doc instanceof Html) {
-            $doc->body = $doc->fixHead()->root()->find('body', 0);
+            $doc->body = $doc->fixHead()->find('body', 0);
         }
         return $doc;
     }
@@ -95,7 +99,7 @@ class Html extends Document
     {
         if (!is_null($htmlString)) {
             $this->loadHTML($htmlString);
-            $this->body = $this->fixHead()->root()->find('body', 0);
+            $this->body = $this->fixHead()->find('body', 0);
             return $this;
         }
         if ($this->ajax->childNodes->length) {

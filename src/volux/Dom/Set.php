@@ -1,9 +1,9 @@
 <?php
 /**
- * volux\Dom
- *
- * @link http://github.com/volux/dom
- */
+* volux\Dom
+*
+* @link http://github.com/volux/dom
+*/
 namespace volux\Dom;
 
 use volux\Dom;
@@ -26,8 +26,10 @@ class Set extends \ArrayIterator implements \RecursiveIterator
     {
         parent::__construct();
         $this->ownerDocument = $dom;
-        foreach ($list as $entry) {
-            $this->append($entry);
+        if ($list) {
+            foreach ($list as $entry) {
+                $this->append($entry);
+            }
         }
     }
 
@@ -120,15 +122,9 @@ class Set extends \ArrayIterator implements \RecursiveIterator
      */
     public function eq($offset)
     {
-        $count = $this->count();
-        if ($offset < 0) {
-            $offset = $count - $offset;
-        }
-        if ($count < $offset) {
-            $offset = $count - 1;
-        }
-        if ($this->offsetExists($offset)) {
-            return $this->offsetGet($offset);
+        if ($this->valid()) {
+            $this->seek($offset);
+            return $this->current();
         }
         return $this->ownerDocument->notEmpty(false, 'Set::eq('.$offset.')');
     }
@@ -148,10 +144,11 @@ class Set extends \ArrayIterator implements \RecursiveIterator
      */
     public function first()
     {
-        if ($this->count() == 0) {
-            return $this->ownerDocument->notEmpty(false, 'Set::first()');
+        $this->rewind();
+        if ($this->valid()) {
+            return $this->current();
         }
-        return $this->offsetGet(0);
+        return $this->ownerDocument->notEmpty(false, 'Set::first()');
     }
 
     /**
@@ -159,11 +156,11 @@ class Set extends \ArrayIterator implements \RecursiveIterator
      */
     public function last()
     {
-        if ($this->count() == 0) {
-            return $this->ownerDocument->notEmpty(false, 'Set::last()');
+        if ($this->valid()) {
+            $this->seek($this->count()-1);
+            return $this->current();
         }
-        $offset = $this->count()-1;
-        return $this->offsetGet($offset);
+        return $this->ownerDocument->notEmpty(false, 'Set::last()');
     }
 
     /**
@@ -199,6 +196,12 @@ class Set extends \ArrayIterator implements \RecursiveIterator
         if (false === $key) {
             return $this;
         }
+        /*if ($this->valid()) {
+            $this->seek($key);
+            $this->current()->remove();
+            $this->offsetUnset($this->key());
+            $this->rewind();
+        }*/
         if ($this->offsetExists($key)) {
             $this->offsetGet($key)->remove();
             $this->offsetUnset($key);
@@ -244,32 +247,32 @@ class Set extends \ArrayIterator implements \RecursiveIterator
      */
     public function filter($selector)
     {
-        $nodeset = array();
+        $newSet = new self(array(), $this->ownerDocument);
         if (is_string($selector)) {
             foreach ($this as $node) {
                 /** @var $node Attr|Element|Tag|Field|Text|Cdata|Comment */
                 if ($node->is($selector)) {
-                    $nodeset[] = $node;
+                    $newSet->append($node);
                 }
             }
         } else
-            if (is_callable($selector)) {
-                foreach ($this as $index => $node) {
-                    /** @var $node Attr|Element|Tag|Field|Text|Cdata|Comment */
-                    if ($selector($node, $index)) {
-                        $nodeset[] = $node;
-                    }
+        if (is_callable($selector)) {
+            foreach ($this as $index => $node) {
+                /** @var $node Attr|Element|Tag|Field|Text|Cdata|Comment */
+                if ($selector($node, $index)) {
+                    $newSet->append($node);
                 }
-            } else
-                if ($selector instanceof \DOMNode) {
-                    foreach ($this as $node) {
-                        /** @var $node Attr|Element|Tag|Field|Text|Cdata|Comment */
-                        if ($node->isSameNode($selector)) {
-                            $nodeset[] = $node;
-                        }
-                    }
+            }
+        } else
+        if ($selector instanceof \DOMNode) {
+            foreach ($this as $node) {
+                /** @var $node Attr|Element|Tag|Field|Text|Cdata|Comment */
+                if ($node->isSameNode($selector)) {
+                    $newSet->append($node);
                 }
-        return new self($nodeset, $this->ownerDocument);
+            }
+        }
+        return $newSet;
     }
 
     /**
@@ -283,12 +286,12 @@ class Set extends \ArrayIterator implements \RecursiveIterator
      */
     public function map($method = 'text', $arg = null, $key = 'getNodePath')
     {
-        $array = array();
+        $array = new \ArrayIterator();
         foreach ($this as $node) {
             /** @var $node Attr|Element|Tag|Field|Text|Cdata|Comment */
-            $array[$node->$key()] = $node->$method($arg);
+            $array->offsetSet($node->$key(), $node->$method($arg));
         }
-        return new \ArrayIterator($array);
+        return $array;
     }
 
     /**
@@ -305,6 +308,7 @@ class Set extends \ArrayIterator implements \RecursiveIterator
     }
 
     /**
+     * @todo make faster!!!
      * @param string $xslFile
      * @param array $xsltParameters
      *
@@ -312,10 +316,7 @@ class Set extends \ArrayIterator implements \RecursiveIterator
      */
     public function xslt($xslFile, $xsltParameters = array())
     {
-        foreach ($this as $node) {
-            $this->ownerDocument->xslt($xslFile, $xsltParameters, $node);
-        }
-        return $this;
+        return $this->ownerDocument->xslt($xslFile, $xsltParameters, $this);
     }
 
     /**
@@ -350,8 +351,12 @@ class Set extends \ArrayIterator implements \RecursiveIterator
 
     public function __get($property)
     {
-        $entry = $this->first();
-        return $entry->$property;
+        return $this->first()->$property;
+    }
+
+    public function __set($property, $value)
+    {
+        return $this->first()->$property = $value;
     }
 
     /**

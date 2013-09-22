@@ -33,7 +33,7 @@ $htmlResult = new Dom\Html();
 
 $htmlResult->title('Google News Test');
 
-Html::doc()->load('http://news.google.com/news')
+Dom\Html::doc()->load('http://news.google.com/news')
     ->find('.titletext')
         ->each(function ($node, $index) use ($htmlResult) {
             $htmlResult->body()
@@ -225,7 +225,6 @@ Implement most important & relevant functional in jQuery API Manipulation & Trav
  + .css()
  + .detach()
  + .index()
- + .nextAll()
  + .nextUntil()
  + .not()
  + .slice()

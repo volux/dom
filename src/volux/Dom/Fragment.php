@@ -1,9 +1,9 @@
 <?php
 /**
- * volux\Dom
- *
- * @link http://github.com/volux/dom
- */
+* volux\Dom
+*
+* @link http://github.com/volux/dom
+*/
 namespace volux\Dom;
 
 use volux\Dom;
@@ -18,22 +18,6 @@ class Fragment extends \DOMDocumentFragment
 
     /** @var  Set */
     protected $subset;
-
-    /**
-     * for future
-     *
-     * @param Set $set
-     *
-     * @return Set
-     */
-    public function &subset(Set &$set = null)
-    {
-        if (is_null($set)) {
-            return $this->subset;
-        }
-        $this->subset = $set;
-        return $this->subset;
-    }
 
     /**
      * @return Document|Html|Table|Form

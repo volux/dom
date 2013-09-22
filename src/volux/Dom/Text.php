@@ -1,9 +1,9 @@
 <?php
 /**
- * volux\Dom
- *
- * @link http://github.com/volux/dom
- */
+* volux\Dom
+*
+* @link http://github.com/volux/dom
+*/
 namespace volux\Dom;
 
 use volux\Dom;
@@ -24,7 +24,7 @@ class Text extends \DOMText
      */
     public function is($expr)
     {
-        return !$this->ownerDocument->find(array($this->getNodePath(), $expr))->isEmpty();
+        return !$this->ownerDocument->find(array($this->getNodePath().'/self::', $expr))->isEmpty();
     }
 
     /**
@@ -34,7 +34,7 @@ class Text extends \DOMText
      */
     public function has($expr)
     {
-        return !$this->find($expr)->isEmpty();
+        return !$this->find(array('/descendant-or-self::', $expr))->isEmpty();
     }
 
     /**

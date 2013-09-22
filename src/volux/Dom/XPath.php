@@ -1,9 +1,9 @@
 <?php
 /**
- * volux\Dom
- *
- * @link http://github.com/volux/dom
- */
+* volux\Dom
+*
+* @link http://github.com/volux/dom
+*/
 namespace volux\Dom;
 
 use volux\Dom;
@@ -52,11 +52,8 @@ class XPath extends \DOMXPath {
     public function query($expression, \DOMNode $contextnode = null, $registerNodeNS = true)
     {
         $prepared = $this->expression($expression);
-        $result = @parent::query($this->expression($expression), $contextnode, $registerNodeNS);
-        $error = error_get_last();
-        if (!is_null($error)) {
-            $this->doc->debug(array($expression, $prepared, $error));
-        }
+        $result = @parent::query($prepared, $contextnode, $registerNodeNS);
+        $this->doc->debug(array('result', $expression, $prepared, $result));
         return $this->doc->set($result);
     }
 
@@ -67,12 +64,12 @@ class XPath extends \DOMXPath {
      */
     public function expression($expression, $axis = 'descendant::')
     {
-        if ($expression == '') {
-            return $axis.'*';
-        }
         if (is_array($expression)) {
             $axis = array_shift($expression);
             $expression = array_shift($expression);
+        }
+        if ($expression == '' or $expression == '*') {
+            return $axis.'*';
         }
         $input = $expression;
         if ($this->inCache($expression)) {
@@ -125,10 +122,8 @@ class XPath extends \DOMXPath {
     protected function readyToCache()
     {
         $ready = array(
-            '' => '',
             '.' => '/text()',
-            '*' => '*',
-            '/text()' => '/text()',
+            'text()' => 'text()',
         );
         $this->cache = $ready;
         return $this;
@@ -194,18 +189,25 @@ class XPath extends \DOMXPath {
                 '`\.`' => '/text()',
             ),
             1 => array(
-                '`\.(_?[a-z]+[\w]?(?:(?:-+[\w]+)|(?:[\w]?)))`' => "[contains(concat(\" \",normalize-space(@class),\" \"),concat(\" \",\"\${1}\",\" \"))]",
-                '`#(_?[a-z]+[\w]?(?:(?:-+[\w]+)|(?:[\w]?)))`' => "[@id=\"\${1}\"]",
-                '`(?:[/\*]+)(_?[a-z]+[\w]?(?:(?:-+[\w]+)|(?:[\w]?))(?!\w*(?:[\(\]-]|(?:.)?=|::)))`' => "[local-name()=\"\${1}\"]",
+                /* class */
+                '`\.(_?[a-z]+[\w]?(?:(?:-+[\w]+)|(?:[\w]?)))`' => '[contains(concat(" ",normalize-space(@class)," "),concat(" ","%s"," "))]',
+                /* id */
+                '`#(_?[a-z]+[\w]?(?:(?:-+[\w]+)|(?:[\w]?)))`' => '[@id="%s"]',
+                /* tag */
+                '`(?:[/\*]+)?(_?[a-z]+[\w]?(?:(?:-+[\w]+)|(?:[\w]?))(?!\w*(?:[\(\]-]|(?:.)?=|::)))`' => '[local-name()="%s"]',
+                /* attr */
+                '`\[@?(_?[a-z]+[\w]?(?:(?:-+[\w]+)|(?:[\w]?))(?=(?:\])))\]`i' => '[@%s]',
             ),
         );
 
         $words = str_word_count($selector);
 
         if (isset($easy[$words])) {
-
-            $selector = $this->replace($easy[$words], $selector);
-            return $selector;
+            foreach ($easy[$words] as $pattern => $replace) {
+                if (preg_match($pattern, $selector, $matches)) {
+                    return sprintf($replace, $matches[1]);
+                }
+            }
         }
         $patterns = array(
             /* double spaces to one */
@@ -268,7 +270,7 @@ class XPath extends \DOMXPath {
         );
         $selector = $this->replace($patterns, $selector);
         $selector = preg_replace_callback(
-        /* $= attribute */
+            /* $= attribute */
             '`((?<=[\s\[])@?(_?[a-z]+[\w]?(?:(?:-+[\w]+)|(?:[\w]?))(?=(?:[^"]*"[^"]*")*[^"]*$))(?=(?:\]|.?=))(?:(.?=)?([^\]]*)?))\$=([^\]]+)`i',
             function ($matches) {
                 return "substring(" . $matches[1] . ",string-length(" . $matches[1] . ")-" . (strlen($matches[5])-2) . ")=" . $matches[5];
@@ -276,7 +278,7 @@ class XPath extends \DOMXPath {
             $selector
         );
         $selector = preg_replace_callback(
-        /* :nth-child */
+            /* :nth-child */
             '`(\*?\[[^\]]+\]):nth-child\((.*)\)`',
             function ($matches) {
                 $a = $matches[1];
@@ -301,7 +303,7 @@ class XPath extends \DOMXPath {
                 }
             },
             $selector
-        );
-        return $selector;
+       );
+      return $selector;
     }
 }

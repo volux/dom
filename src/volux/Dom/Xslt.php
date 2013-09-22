@@ -1,9 +1,9 @@
 <?php
 /**
- * volux\Dom
- *
- * @link http://github.com/volux/dom
- */
+* volux\Dom
+*
+* @link http://github.com/volux/dom
+*/
 namespace volux\Dom;
 
 use volux\Dom;
@@ -64,20 +64,37 @@ class Xslt extends Document
     /**
      * @param string $xslFile
      * @param array  $xsltParameters
-     * @param Element|Tag|Field $element
+     * @param Element|Tag|Field|Set $element
      * @param string $ns namespace
      *
      * @return \DOMDocument
      */
-    public function transform($xslFile, $xsltParameters = array(), $element, $ns = '')
+    public function transform($xslFile, $xsltParameters = array(), &$element, $ns = '')
     {
-        $this->load($xslFile, LIBXML_NOCDATA, $result = false);
+        $this->load($xslFile, LIBXML_NOCDATA, $result);
         if (!$result) {
-            return false;
+            return $element;
         }
         foreach ($xsltParameters as $name => $value) {
             $this->processor->setParameter($ns, $name, $value);
         }
-        return $this->processor->transformToDoc($element);
+        if ($element instanceof Set) {
+            $processor = $this->processor;
+            $element->each(function(Element $el) use ($processor, $xslFile) {
+                $result = $processor->transformToDoc($el);
+                if (!$result) {
+                    $el->after($el->ownerDocument->createComment('not transformed with '.$xslFile));
+                } else {
+                    $el->replace($result->documentElement, $el);
+                }
+            });
+            return $element;
+        }
+        $result = $this->processor->transformToDoc($element);
+        if (!$result) {
+            $element->after($element->ownerDocument->createComment('not transformed with '.$xslFile));
+        }
+        $element->replace($result->documentElement, $element);
+        return $element;
     }
 }

@@ -1,9 +1,9 @@
 <?php
 /**
- * volux\Dom
- *
- * @link http://github.com/volux/dom
- */
+* volux\Dom
+*
+* @link http://github.com/volux/dom
+*/
 namespace volux\Dom;
 /**
  * Class Document
@@ -170,7 +170,15 @@ class Document extends \DOMDocument
      */
     public function saveHTML(\DOMNode $node = null)
     {
-        return rawurldecode(parent::saveHTML($node));
+        if (!is_null($node)) {
+            if (PHP_RELEASE_VERSION < 6) {
+                $fix = self::doc();
+                $fix->appendChild($fix->importNode($node, true));
+                return rawurldecode($fix->saveHTML());
+            }
+            return rawurldecode(parent::saveHTML($node));
+        }
+        return rawurldecode(parent::saveHTML());
     }
 
     /**
@@ -358,21 +366,16 @@ class Document extends \DOMDocument
     /**
      * @param string|callable $xslFile absolute o relative path to XSL file used include path
      * @param array $xsltParameters
-     * @param null|\DOMNode  $element
+     * @param null|\DOMNode|Set  $element
      *
      * @return Element|Tag|Field
      */
-    public function xslt($xslFile, $xsltParameters = array(), $element = null)
+    public function xslt($xslFile, $xsltParameters = array(), &$element = null)
     {
         if (is_null($element)) {
             $element = $this->documentElement;
         }
-        $newTree = Xslt::doc()->transform($xslFile, $xsltParameters, $element);
-        if ($newTree) {
-            return $element->replace($newTree->documentElement);
-        }
-        $element->after($this->createComment($element->getNodePath().' not transformed with '.$xslFile));
-        return $element;
+        return Xslt::doc()->transform($xslFile, $xsltParameters, $element);
     }
 
     /**
@@ -425,11 +428,11 @@ class Document extends \DOMDocument
         if ($xml{0} !== '<') {
             $xml = (string)$this->set($fix->childNodes)->getChildren();
         } else
-            if ($fix->childNodes->length) {
-                $xml = (string)$this->set($fix->childNodes);
-            } else {
-                $xml = (string)$fix;
-            }
+        if ($fix->childNodes->length) {
+            $xml = (string)$this->set($fix->childNodes);
+        } else {
+            $xml = (string)$fix;
+        }
         return @$fragment->appendXML($xml);
     }
 
@@ -560,18 +563,17 @@ class Document extends \DOMDocument
 
                     case '#text':
                         /** @var Element|Tag $node */
-                        $node->text($value);
-                        return $node;
+                        return $node->text($value, false);
                         break;
 
                     case '#comment':
                         /** @var Element|Tag $node */
-                        $node = $node->append($this->createComment($value));
+                        $node = $node->appendChild($node->ownerDocument->createComment($value));
                         break;
 
                     case '#cdata-section':
                         /** @var Element|Tag $node */
-                        $node = $node->append($this->createCData($value));
+                        $node = $node->appendChild($node->ownerDocument->createCData($value));
                         break;
 
                     case '@':
@@ -583,7 +585,7 @@ class Document extends \DOMDocument
 
                     default:
                         /** @var Element|Tag $node */
-                        $node = $node->append($this->createElement($key));
+                        $node = $node->append($key);
                 }
             }
             if (is_array($value)) {

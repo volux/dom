@@ -1,9 +1,9 @@
 <?php
 /**
- * volux\Dom
- *
- * @link http://github.com/volux/dom
- */
+* volux\Dom
+*
+* @link http://github.com/volux/dom
+*/
 namespace volux\Dom;
 
 use volux\Dom;
@@ -46,7 +46,7 @@ class Element extends \DOMElement
      */
     public function is($expr)
     {
-        return !$this->ownerDocument->find(array($this->getNodePath(), $expr))->isEmpty();
+        return !$this->ownerDocument->find(array($this->getNodePath().'/self::', $expr))->isEmpty();
     }
 
     /**
@@ -56,7 +56,7 @@ class Element extends \DOMElement
      */
     public function has($expr)
     {
-        return !$this->find($expr)->isEmpty();
+        return !$this->find(array('/descendant-or-self::', $expr))->isEmpty();
     }
 
     /**
@@ -86,9 +86,9 @@ class Element extends \DOMElement
     }
 
     /**
-     * @param string|Element|Tag|Field $target css selector or Element
+     * @param Element|Tag|Field $target css selector or Element
      *
-     * @return Element|Tag|Field
+     * @return \DOMNode|Element|Tag|Field
      */
     public function appendTo(Element $target)
     {
@@ -126,7 +126,7 @@ class Element extends \DOMElement
     /**
      * @param null|string $selector
      *
-     * @return Element|Text|Tag|Field
+     * @return \DOMElement|Attr|Cdata|Comment|Element|Field|Set|Tag|Text
      */
     public function next($selector = null)
     {
@@ -139,14 +139,34 @@ class Element extends \DOMElement
     /**
      * @param null|string $selector
      *
-     * @return Element|Text|Tag|Field
+     * @return Set
+     */
+    public function nextAll($selector = '*')
+    {
+        return $this->find(array('following-sibling::', $selector));
+    }
+
+    /**
+     * @param null $selector
+     *
+     * @return \DOMElement|Attr|Cdata|Comment|Element|Field|Set|Tag|Text
      */
     public function prev($selector = null)
     {
         if (is_null($selector)) {
             return $this->previousSibling;
         }
-        return $this->find(array('preceding-sibling::', $selector), 0);#->last();
+        return $this->find(array('preceding-sibling::', $selector))->last();
+    }
+
+    /**
+     * @param null|string $selector
+     *
+     * @return Set
+     */
+    public function prevAll($selector = '*')
+    {
+        return $this->find(array('preceding-sibling::', $selector));
     }
 
     /**
@@ -194,7 +214,7 @@ class Element extends \DOMElement
      */
     public function replace($newNode, &$oldNode = null)
     {
-        $newNode = $this->parent()->appendChild($this->ownerDocument->importNode($this->ownerDocument->check($newNode)));
+        $newNode = $this->before($newNode);
         $oldNode = $this->parent()->replaceChild($newNode, $this);
         return $newNode;
     }
@@ -558,7 +578,7 @@ class Element extends \DOMElement
     {
         if (!is_null($newText)) {
             if ($replace) {
-                $this->nodeValue = '';
+                $this->children()->remove();
                 if ($newText instanceof Set) {
                     foreach ($newText as $node) {
                         $this->nodeValue.= $node->nodeValue;;
@@ -595,7 +615,7 @@ class Element extends \DOMElement
      */
     public function content()
     {
-        return $this->find(array('.', '/text()'));
+        return $this->find(array('self::', 'text()'));
     }
 
     /**
